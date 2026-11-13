@@ -545,7 +545,7 @@ function render(S, V) {
 
   // everything that stands up, back to front
   const items = [];
-  for (const o of S.objs) { if (o.wall) { DRAW[o.kind](g, o, null, S, t); continue; } const b = bounds(o); items.push({ y: b.y + b.d - 1, fn: () => DRAW[o.kind](g, o, b, S, t) }); }
+  for (const o of S.objs) { if (V.hideObj === o.id) continue; if (o.wall) { DRAW[o.kind](g, o, null, S, t); continue; } const b = bounds(o); items.push({ y: b.y + b.d - 1, fn: () => DRAW[o.kind](g, o, b, S, t) }); }
   for (const k in HW.HIDES) { const f = k[0], [c, r] = k.slice(1).split(',').map(Number); items.push({ y: ty(f, r) + 3, fn: () => drapes(g, f, c, r, DRAPE[k], false) }); if (HW.heroList(S).some(h => h.hidden && HW.key(h) === k)) items.push({ y: ty(f, r) + TY - 1, fn: () => drapes(g, f, c, r, DRAPE[k], true) }); }
   for (const tr of S.traps) { const a = V.anim['trap' + tr.id]; const draw = front => { if (a) { g.save(); g.translate(a.x - cx(tr.c), a.y - cy(tr.f, tr.r)); trap(g, tr, S, t, front); g.restore(); } else trap(g, tr, S, t, front); }; items.push({ y: cy(tr.f, tr.r) - 2, fn: () => draw(false) }); items.push({ y: cy(tr.f, tr.r) + 2, fn: () => draw(true) }); }
   for (const it of S.ground) items.push({ y: cy(it.f, it.r) - 3, fn: () => token(g, it, t) });
@@ -567,6 +567,12 @@ function render(S, V) {
 
   // things that show in the dark
   for (const tr of S.traps) if (!V.anim['trap' + tr.id]) trapEyes(g, tr, S, t);
+  // face-down search tokens sit on every piece of furniture that has not been searched
+  g.font = '700 9px "Alegreya Sans", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (const o of S.objs) if (V.hideObj !== o.id && ((o.search && !S.searched[o.id]) || (o.id === 'hatch' && !S.clues.hatch && S.key.state === 'hidden'))) {
+    const b = objBox(o), x = b.x + b.w - 8, y = b.y + 8;
+    g.fillStyle = 'rgba(0,0,0,.55)'; circ(g, x + 1, y + 2, 6.5); g.fill(); g.fillStyle = '#3a2a1c'; circ(g, x, y, 6.2); g.fill(); g.strokeStyle = '#c9a45c'; g.lineWidth = 1.3; g.stroke(); g.fillStyle = '#ffd98a'; g.fillText('?', x, y + 0.5);
+  }
   if (V.target) { const o = V.target, k = Math.sin(t * 3.5) * 0.5 + 0.5; g.strokeStyle = `rgba(255,217,138,${0.5 + k * 0.5})`; g.lineWidth = 2; g.setLineDash([5, 4]); g.lineDashOffset = -t * 12; rrect(g, o.x - 2, o.y - 2, o.w + 4, o.h + 4, 5); g.stroke(); g.setLineDash([]); g.fillStyle = '#ffd98a'; const mx = o.x + o.w / 2, my = o.y - 9 - k * 4; poly(g, [mx - 5, my - 5, mx + 5, my - 5, mx, my + 2]); g.fill(); }
   if (V.star) { const x = cx(V.star.c), y = cy(V.star.f, V.star.r), k = Math.sin(t * 4) * 0.5 + 0.5; g.strokeStyle = 'rgba(255,255,255,.95)'; g.lineWidth = 2.2; ell(g, x, y, 16 + k * 2, 9.5 + k); g.stroke(); g.fillStyle = '#ffd98a'; g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1; const my = y - 15 - k * 4; g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? 3 : 7; g.lineTo(x + Math.cos(a) * rr, my + Math.sin(a) * rr); } g.closePath(); g.fill(); g.stroke(); }
   if (V.hover && V.hover.box) { const o = V.hover.box; g.strokeStyle = '#fff'; g.lineWidth = 1.6; rrect(g, o.x - 1, o.y - 1, o.w + 2, o.h + 2, 4); g.stroke(); }

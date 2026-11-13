@@ -247,6 +247,47 @@ table.haunt { border-collapse: collapse; width: 100%; font-size: 12px; font-vari
 .notelist small { display: block; color: var(--parch-dim); font-size: 12px; }
 .notelist b { color: var(--brass); font-weight: 500; }
 @media (prefers-reduced-motion: reduce) { #guide, #bigdie.roll .die { animation: none; } #caption { transition: none; } }
+
+/* ---- the table: real decks, tokens and the pile of cards you have found ---- */
+.tablebox { display: flex; gap: 6px 10px; align-items: flex-end; flex-wrap: wrap; }
+.deck { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 10.5px; line-height: 1.1; color: var(--parch-dim); text-align: center; width: 62px; background: none; border: 0; padding: 0; }
+.deck .stk { width: 34px; height: 46px; border-radius: 4px; background: repeating-linear-gradient(45deg, #5d1f2e 0 4px, #4a1723 4px 8px); border: 1px solid #b8923f; box-shadow: 2px 2px 0 #2a1016, 4px 4px 0 #1c0b10; display: grid; place-items: center; color: #ffd98a; font: 400 18px var(--display); }
+.deck.shared .stk { background: repeating-linear-gradient(45deg, #27483f 0 4px, #1d3a33 4px 8px); box-shadow: 2px 2px 0 #10221d; }
+.deck.memory .stk { background: repeating-linear-gradient(45deg, #3b5f9a 0 4px, #2f4d80 4px 8px); border-color: #c7dcf2; color: #e6f1ff; box-shadow: 2px 2px 0 #1b2c4a, 4px 4px 0 #121e33; }
+.deck.tokens .stk { width: 36px; height: 36px; border-radius: 50%; background: #3a2a1c; box-shadow: 0 3px 0 #120c08, 0 6px 0 #0c0806; margin-bottom: 5px; }
+.deck.found .stk { background: #efe4c9; color: #241810; border-color: #7a6a45; box-shadow: 2px 2px 0 #b8a67c, 4px 4px 0 #8a7a55; }
+.deck.found:not(:disabled) { cursor: pointer; color: var(--parch); }
+.deck.found:not(:disabled):hover .stk { outline: 2px solid var(--brass); }
+.deck.empty .stk { opacity: .35; box-shadow: none; }
+
+/* ---- a card drawn from a deck ---- */
+#draw { position: absolute; inset: 0; z-index: 7; display: flex; gap: 18px; justify-content: center; padding: 16px; background: rgba(6, 4, 8, .4); }
+#draw.high { align-items: flex-start; } #draw.low { align-items: flex-end; }
+.pcard { width: 176px; height: 244px; perspective: 900px; flex: none; transition: transform .6s cubic-bezier(.2, .8, .3, 1); }
+.pcard.in { transform: translate(-130px, -24px) rotate(-14deg) scale(.55); }
+.pc-in { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform .6s .12s; }
+.pcard.in .pc-in { transform: rotateY(180deg); }
+.pc-front, .pc-back { position: absolute; inset: 0; border-radius: 10px; backface-visibility: hidden; box-shadow: 0 12px 30px rgba(0, 0, 0, .75); }
+.pc-back { transform: rotateY(180deg); background: repeating-linear-gradient(45deg, #5d1f2e 0 7px, #4a1723 7px 14px); border: 6px solid #efe4c9; display: grid; place-items: center; color: #ffd98a; font: italic 17px var(--display); text-align: center; }
+.pcard.both .pc-back { background: repeating-linear-gradient(45deg, #27483f 0 7px, #1d3a33 7px 14px); }
+.pc-front { background: #efe4c9; color: #241810; padding: 12px 13px; display: flex; flex-direction: column; gap: 6px; border-top: 7px solid #7a2233; }
+.pcard.brock .pc-front { border-top-color: var(--brock); } .pcard.wesley .pc-front { border-top-color: var(--wesley); } .pcard.both .pc-front { border-top-color: #27483f; }
+.pc-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: #7a2233; }
+.pc-top i { font: 400 26px/1 var(--display); font-style: normal; }
+.pc-front h3 { font: 400 22px/1.05 var(--display); margin: 2px 0; text-wrap: balance; }
+.pc-front p { font-size: 13.5px; line-height: 1.3; margin: 0; flex: 1; }
+.pc-foot { font-size: 11.5px; line-height: 1.25; border-top: 1px solid #b8a67c; padding-top: 6px; color: #5a4a36; }
+.dside { width: min(300px, 46%); display: flex; flex-direction: column; gap: 9px; margin-block: 34px; background: rgba(13, 10, 14, .94); border: 1px solid var(--brass-dim); border-radius: 8px; padding: 13px; box-shadow: 0 10px 30px rgba(0, 0, 0, .7); }
+.dcap { font: italic 18px/1.25 var(--display); }
+.dnote { font-size: 13.5px; line-height: 1.35; color: var(--parch); border-left: 2px solid var(--brass); padding-left: 8px; }
+.dbtn { align-self: flex-start; background: var(--brass); color: #1a120a; font-weight: 700; border: 0; border-radius: 4px; padding: 7px 18px; font-size: 15px; }
+.jlist { display: flex; flex-direction: column; gap: 8px; margin-bottom: 6px; }
+.jlist > div { border: 1px solid #b8a67c; border-radius: 4px; padding: 8px 10px; }
+.jlist > div.memory { background: #e9f1fb; border-color: #9db4d6; font-style: italic; }
+.jlist b { font-family: var(--display); font-weight: 400; font-size: 18px; font-style: normal; display: block; }
+.jlist p { font-family: var(--display); font-size: 15.5px; margin: 2px 0 0; }
+@media (max-width: 1020px) { #draw { position: fixed; z-index: 25; flex-direction: column; align-items: center !important; justify-content: center; background: rgba(6, 4, 8, .82); } .dside { width: min(320px, 100%); align-self: auto; } }
+@media (prefers-reduced-motion: reduce) { .pcard, .pc-in { transition: none; } }
 </style>
 <div id="app">
   <header>
@@ -270,6 +311,7 @@ table.haunt { border-collapse: collapse; width: 100%; font-size: 12px; font-vari
         <button id="skip" class="ghostbtn" type="button" hidden>Skip the opening</button>
         <div id="bigdie" hidden><div class="die big"></div><div class="bd-label" hidden></div></div>
         <div id="guide" hidden></div>
+        <div id="draw" hidden></div>
         <div id="pop" hidden></div>
       </div>
       <div id="hint" role="status"></div>
@@ -280,6 +322,7 @@ table.haunt { border-collapse: collapse; width: 100%; font-size: 12px; font-vari
         <div class="box"><h3>Bond</h3><div class="bond" id="bond"></div><div class="sub" id="bondSub"></div></div>
         <div class="box"><h3>Insight</h3><div class="ins" id="ins"></div><div class="sub" id="keySub"></div></div>
       </div>
+      <div class="box"><h3>On the table</h3><div class="tablebox" id="table"></div></div>
       <div class="box tray">
         <div class="dice">
           <div class="dslot"><div class="die" id="dieHero"></div><span id="dieHeroT">Move</span></div>
@@ -805,6 +848,14 @@ function options(S, h) {
 }
 const sameOpt = (a, b) => a.type === b.type && a.obj === b.obj && a.help === b.help && a.item === b.item && a.target === b.target;
 
+// How much longer is the way to `goal` because the blocked route has not been lifted yet?
+function routeInfo(S, h, goal) {
+  if (S.coopDone || !goal.length) return null;
+  const ob = obj(S, S.obstacle), dist = () => { const n = bfs(S, goal, { noTraps: true }).get(key(h)); return n ? n.d : 1e9; };
+  const long = dist(), saved = S.block, freed = (ob.id === 'cabinet' ? [[11, 2]] : ob.t).map(([c, r]) => key(ob.f, c, r));
+  S.block = new Set([...saved].filter(k => !freed.includes(k))); const short = dist(); S.block = saved;
+  return long - short >= 4 ? { long, short, name: ob.name.toLowerCase() } : null;
+}
 function hint(S, h) {
   const p = partner(S, h), ch = CHAINS[h.chain];
   if (h.trapped) return 'Caught in the trap. Break free (roll ' + CFG.trapBreak[h.id] + '+), or ' + p.name + ' can free you.';
@@ -817,7 +868,11 @@ function hint(S, h) {
   }
   const st = stepOf(S, h);
   const where = it => { const l = locate(S, it); if (!l) return ''; if (l.where === 'ground') return 'It was thrown. Walk over it to pick it up.'; if (l.where === 'hero' && l.id !== h.id) return p.name + ' is carrying it. Stand beside him so he can hand it over.'; return ''; };
-  if (st === 'find') return ch.findTitle + ': ' + (where(ch.item) || ch.findText);
+  if (st === 'find') {
+    const l = locate(S, ch.item); let out = ch.findTitle + ': ' + (where(ch.item) || ch.findText);
+    if (l && l.where === 'obj') { const ri = routeInfo(S, h, adjTilesOfObj(S, obj(S, l.id))); if (ri) out += ' The ' + ri.name + ' is in the way: ' + ri.long + ' spaces round, or ' + ri.short + ' once you and ' + p.name + ' lift it.'; }
+    return out;
+  }
   if (st === 'coop') { const ob = obj(S, S.obstacle); return 'Shared task: meet ' + p.name + ' at the ' + ob.name + ' and lift it together. One action each.'; }
   if (st === 'use') return ch.useTitle + ': ' + (h.inv.includes(ch.item) ? ch.useText : where(ch.item));
   return 'Your cards are done. Help ' + p.name + ', or search the rooms for clues.';
@@ -988,7 +1043,7 @@ function* walk(S, h, path) {
 function* doSearch(S, h, o) {
   h.actions--; S.searched[o.id] = true;
   const L = S.loot[o.id] || { k: 'dust' };
-  yield { t: 'search', hero: h.id, obj: o.id };
+  yield { t: 'search', hero: h.id, obj: o.id, found: L };
   if (L.k === 'chain') {
     const mine = CHAINS[h.chain].item === L.item;
     yield { t: 'log', cls: 'good', text: h.name + ' finds the ' + ITEMS[L.item].name + ' in the ' + o.name + '.' };
@@ -1527,7 +1582,7 @@ function aiAnswer(S, ev) {
   return false;
 }
 
-root.HW = { CFG, MAPS, W, H, DIRS, STAIRS, HIDES, EXITS, DOORFRONT, ITEMS, CHAINS, CLUES, STORY, LINES, GHOST_NAMES, HOLLOW_NAMES,
+root.HW = { MEMORIES, routeInfo, CFG, MAPS, W, H, DIRS, STAIRS, HIDES, EXITS, DOORFRONT, ITEMS, CHAINS, CLUES, STORY, LINES, GHOST_NAMES, HOLLOW_NAMES,
   key, same, cheb, roomAt, newGame, game, options, hint, reach, gazeTiles, stepOf, tier, obj, fmtTime, locate, adjObj, adjTilesOfObj, isExit, isDoorFront,
   aiAct, aiMove, aiAnswer, canReroll, movePts, partner, heroList, awake, bfs };
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -2080,7 +2135,7 @@ function render(S, V) {
 
   // everything that stands up, back to front
   const items = [];
-  for (const o of S.objs) { if (o.wall) { DRAW[o.kind](g, o, null, S, t); continue; } const b = bounds(o); items.push({ y: b.y + b.d - 1, fn: () => DRAW[o.kind](g, o, b, S, t) }); }
+  for (const o of S.objs) { if (V.hideObj === o.id) continue; if (o.wall) { DRAW[o.kind](g, o, null, S, t); continue; } const b = bounds(o); items.push({ y: b.y + b.d - 1, fn: () => DRAW[o.kind](g, o, b, S, t) }); }
   for (const k in HW.HIDES) { const f = k[0], [c, r] = k.slice(1).split(',').map(Number); items.push({ y: ty(f, r) + 3, fn: () => drapes(g, f, c, r, DRAPE[k], false) }); if (HW.heroList(S).some(h => h.hidden && HW.key(h) === k)) items.push({ y: ty(f, r) + TY - 1, fn: () => drapes(g, f, c, r, DRAPE[k], true) }); }
   for (const tr of S.traps) { const a = V.anim['trap' + tr.id]; const draw = front => { if (a) { g.save(); g.translate(a.x - cx(tr.c), a.y - cy(tr.f, tr.r)); trap(g, tr, S, t, front); g.restore(); } else trap(g, tr, S, t, front); }; items.push({ y: cy(tr.f, tr.r) - 2, fn: () => draw(false) }); items.push({ y: cy(tr.f, tr.r) + 2, fn: () => draw(true) }); }
   for (const it of S.ground) items.push({ y: cy(it.f, it.r) - 3, fn: () => token(g, it, t) });
@@ -2102,6 +2157,12 @@ function render(S, V) {
 
   // things that show in the dark
   for (const tr of S.traps) if (!V.anim['trap' + tr.id]) trapEyes(g, tr, S, t);
+  // face-down search tokens sit on every piece of furniture that has not been searched
+  g.font = '700 9px "Alegreya Sans", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (const o of S.objs) if (V.hideObj !== o.id && ((o.search && !S.searched[o.id]) || (o.id === 'hatch' && !S.clues.hatch && S.key.state === 'hidden'))) {
+    const b = objBox(o), x = b.x + b.w - 8, y = b.y + 8;
+    g.fillStyle = 'rgba(0,0,0,.55)'; circ(g, x + 1, y + 2, 6.5); g.fill(); g.fillStyle = '#3a2a1c'; circ(g, x, y, 6.2); g.fill(); g.strokeStyle = '#c9a45c'; g.lineWidth = 1.3; g.stroke(); g.fillStyle = '#ffd98a'; g.fillText('?', x, y + 0.5);
+  }
   if (V.target) { const o = V.target, k = Math.sin(t * 3.5) * 0.5 + 0.5; g.strokeStyle = `rgba(255,217,138,${0.5 + k * 0.5})`; g.lineWidth = 2; g.setLineDash([5, 4]); g.lineDashOffset = -t * 12; rrect(g, o.x - 2, o.y - 2, o.w + 4, o.h + 4, 5); g.stroke(); g.setLineDash([]); g.fillStyle = '#ffd98a'; const mx = o.x + o.w / 2, my = o.y - 9 - k * 4; poly(g, [mx - 5, my - 5, mx + 5, my - 5, mx, my + 2]); g.fill(); }
   if (V.star) { const x = cx(V.star.c), y = cy(V.star.f, V.star.r), k = Math.sin(t * 4) * 0.5 + 0.5; g.strokeStyle = 'rgba(255,255,255,.95)'; g.lineWidth = 2.2; ell(g, x, y, 16 + k * 2, 9.5 + k); g.stroke(); g.fillStyle = '#ffd98a'; g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1; const my = y - 15 - k * 4; g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? 3 : 7; g.lineTo(x + Math.cos(a) * rr, my + Math.sin(a) * rr); } g.closePath(); g.fill(); g.stroke(); }
   if (V.hover && V.hover.box) { const o = V.hover.box; g.strokeStyle = '#fff'; g.lineWidth = 1.6; rrect(g, o.x - 1, o.y - 1, o.w + 2, o.h + 2, 4); g.stroke(); }
@@ -2166,7 +2227,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 const reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 const NAMES = { brock: 'Brock', wesley: 'Wesley', lil: 'Lil\'' };
 let S = null, gid = 0, auto = false, demo = true;
-const V = { t: 0, anim: {}, fx: [], bubbles: [], beams: [], rings: [], reach: null, cursor: null, hover: null, input: null, active: null, target: null, shake: 0, pace: 1, status: '', tip: null, drag: null, skipAnim: null, guideOn: true, star: null, hide: null, doorOpen: false, dim: 0, cine: null };
+const V = { t: 0, anim: {}, fx: [], bubbles: [], beams: [], rings: [], reach: null, cursor: null, hover: null, input: null, active: null, target: null, shake: 0, pace: 1, status: '', tip: null, drag: null, skipAnim: null, guideOn: true, star: null, hide: null, doorOpen: false, dim: 0, cine: null, journal: [], dealt: false, dealtN: 0, shown3: {}, hideObj: null, drawNext: null };
 const board = $('#board'); R.setup(board);
 const now = () => performance.now() / 1000;
 const speed = () => V.pace * (auto ? 0.2 : 1);
@@ -2294,6 +2355,7 @@ function hud() {
   const left = Math.max(0, Math.ceil((CFG.midnight - S.time) / CFG.minutesPerRound));
   $('#timeSub').textContent = left + (left === 1 ? ' round' : ' rounds') + ' to midnight';
   watch();
+  renderTable();
   renderActions();
 }
 function watch() {
@@ -2452,6 +2514,65 @@ async function fx(ev) {
   await sleep(420);
 }
 
+/* ---------- the physical side: decks, drawn cards, tokens ---------- */
+function renderTable() {
+  const el = $('#table'); if (!el || !S) return;
+  const nObj = Object.keys(HW.CHAINS).length - (demo ? 0 : V.dealtN), nSh = V.dealt && !demo ? 1 : 2, nMem = Math.max(0, HW.MEMORIES.length - S.memories), nTok = S.objs.filter(o => o.search && !S.searched[o.id]).length, nF = demo ? 0 : V.journal.length;
+  const d = (cls, n, label) => '<div class="deck ' + cls + (n ? '' : ' empty') + '"><div class="stk">' + n + '</div>' + label + '</div>';
+  el.innerHTML = d('obj', nObj, 'Objective deck') + d('shared', nSh, 'Shared deck') + d('memory', nMem, 'Lil’s memories') + d('tokens', nTok, 'Search tokens') +
+    '<button type="button" class="deck found' + (nF ? '' : ' empty') + '" id="btnFound"' + (nF ? '' : ' disabled') + ' title="Read the cards you have found"><div class="stk">' + nF + '</div>Found cards</button>';
+}
+$('#table').addEventListener('click', e => {
+  if (!e.target.closest('#btnFound') || !$('#modal').hidden || !V.journal.length) return;
+  const html = '<div class="jlist">' + V.journal.map(c => '<div class="' + c.kind + '"><b>' + esc(c.title) + '</b>' + (c.text ? '<p>' + esc(c.text) + '</p>' : '') + '</div>').join('') + '</div>';
+  showCard({ kind: 'story', cls: 'rules', title: 'Found cards', sub: 'Clues, memories and what the house has shown you', html }, [{ label: 'Close', value: true }]);
+});
+// A card comes off a deck, turns face up beside the board, and the board lights what it is about.
+function drawCard(o) {
+  if (auto) return Promise.resolve();
+  return new Promise(res => {
+    const el = $('#draw'); V.target = o.target || null;
+    el.className = o.target && o.target.y < R.OY.G - 40 ? 'low' : 'high';
+    el.innerHTML = '<div class="pcard in ' + o.who + '"><div class="pc-in"><div class="pc-back"><span>' + esc(o.deck) + '</span></div><div class="pc-front"><div class="pc-top"><i>' + o.num + '</i><span>' + esc(o.kind) + '</span></div><h3>' + esc(o.title) + '</h3><p>' + esc(o.text) + '</p>' + (o.foot ? '<div class="pc-foot">' + esc(o.foot) + '</div>' : '') + '</div></div></div>' +
+      '<div class="dside"><div class="dcap">' + esc(o.cap) + '</div>' + (o.note ? '<div class="dnote">' + esc(o.note) + '</div>' : '') + '<button type="button" class="dbtn">Continue</button></div>';
+    el.hidden = false; Snd.search();
+    setTimeout(() => { const c = el.querySelector('.pcard'); if (c) c.classList.remove('in'); }, 60);
+    const done = () => { if (V.drawNext !== done) return; V.drawNext = null; el.hidden = true; el.innerHTML = ''; el.onclick = null; V.target = null; res(); };
+    V.drawNext = done; el.onclick = e => { if (e.target.closest('.dbtn') || e.target === el) done(); };
+    setTimeout(() => { const b = el.querySelector('.dbtn'); if (b) b.focus({ preventScroll: true }); }, 750);
+  });
+}
+async function dealScene() {
+  const me = gid, ob = HW.obj(S, S.obstacle);
+  if (auto) { V.hideObj = null; V.dealt = true; V.dealtN = 2; return; }
+  await banner('The Deal', 750); if (me !== gid) return;
+  for (const h of HW.heroList(S)) {
+    const ch = HW.CHAINS[h.chain], fo = HW.obj(S, ch.find);
+    V.dealtN++; hud(); addLog(h.name + ' draws from the Objective deck: ' + esc(ch.findTitle) + '.', 'good');
+    await drawCard({ deck: 'Objective deck', kind: h.name + '’s objective', who: h.id, num: 'I', title: ch.findTitle, text: ch.findText, foot: 'His card III stays face down until cards I and II are done.',
+      cap: h.name + ' draws a card from the Objective deck.', note: 'Lit on the board: the ' + fo.name + ' in the ' + HW.roomAt(fo.f, fo.t[0][0], fo.t[0][1]) + '. The token on it is face down until someone searches it.', target: R.objBox(fo) });
+    if (me !== gid) return;
+  }
+  V.hideObj = null; V.dealt = true; V.shake = now() + 0.35; Snd.thud(); hud();
+  const ob2 = R.objBox(ob); ring(ob2.x + ob2.w / 2, ob2.y + ob2.h / 2, 'rgba(255,217,138,A)', 70, 1);
+  addLog('The Shared deck gives: lift the ' + esc(ob.name) + '. Its piece goes on the board.', 'good');
+  const blocked = HW.heroList(S).map(h => { const fo = HW.obj(S, HW.CHAINS[h.chain].find), ri = HW.routeInfo(S, h, HW.adjTilesOfObj(S, fo)); return ri ? 'For ' + h.name + ' it is in the way of the ' + fo.name + ': ' + ri.long + ' spaces round, or ' + ri.short + ' once it is lifted.' : ''; }).filter(Boolean).join(' ');
+  await drawCard({ deck: 'Shared deck', kind: 'Shared objective', who: 'both', num: 'II', title: 'Lift the ' + ob.name,
+    text: 'Put the ' + ob.short + ' piece ' + (S.variant === 'A' ? 'across the Servants’ Passage' : 'in the archway between the Gallery and the Music Room') + '. Both heroes stand beside it and each spends 1 action to lift it clear.', foot: 'Counts for both of you, even if one has not finished card I.',
+    cap: 'One card from the Shared deck goes between them, and its piece goes on the board.', note: blocked || 'Nobody’s first objective is behind it tonight, but both of you need it lifted before card III.', target: ob2 });
+}
+async function revealThird() {
+  if (!S || auto) return;
+  for (const h of HW.heroList(S)) {
+    if (!h.got || !S.coopDone || V.shown3[h.id]) continue;
+    V.shown3[h.id] = true; if (h.useDone) continue;
+    const ch = HW.CHAINS[h.chain], uo = HW.obj(S, ch.use);
+    addLog(h.name + ' turns over his last card: ' + esc(ch.useTitle) + '.', 'good');
+    await drawCard({ deck: 'Card III', kind: h.name + '’s objective', who: h.id, num: 'III', title: ch.useTitle, text: ch.useText, foot: 'Reward: ' + ch.reward,
+      cap: h.name + ' turns his last card face up.', note: 'Lit on the board: the ' + uo.name + ' in the ' + HW.roomAt(uo.f, uo.t[0][0], Math.max(1, uo.t[0][1])) + '.' + (ch.brain ? ' It is a thinking task: ' + ch.work + ' actions of work, or Wesley can Deduce it for 2 Insight.' : ''), target: R.objBox(uo) });
+  }
+}
+
 /* ---------- input ---------- */
 const human = id => !auto && !S.heroes[id].npc;
 function targetBox(h) {
@@ -2554,6 +2675,7 @@ document.addEventListener('keydown', e => {
   const k = e.key, typing = e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
   if (!$('#notes').hidden) { if (k === 'Escape') closeNotes(); return; }
   if (e.ctrlKey || e.metaKey || e.altKey || typing) return;
+  if (V.drawNext) { if (k === ' ' || k === 'Escape' || (k === 'Enter' && !(e.target && e.target.tagName === 'BUTTON'))) { V.drawNext(); e.preventDefault(); } return; }
   if ((k === 'n' || k === 'N') && $('#modal').hidden) { openNotes(); e.preventDefault(); return; }
   if (!S || demo || !$('#modal').hidden) return;
   if (V.cine) { if (k === 'Escape') skipIntro(); else if (k === ' ' || k === 'Enter') { if (V.cine.next) V.cine.next(); e.preventDefault(); } return; }
@@ -2577,11 +2699,11 @@ document.addEventListener('keydown', e => {
 /* ---------- the driver ---------- */
 async function handle(ev) {
   switch (ev.t) {
-    case 'start': await intro(); break;
+    case 'start': await intro(); await dealScene(); break;
     case 'round': addLog(HW.fmtTime(S.time) + ' · Round ' + ev.n, 'rd'); break;
     case 'turn': { V.active = ev.hero; const h = S.heroes[ev.hero]; V.status = h.npc || auto ? h.name + ' is taking his turn.' : ''; hud(); if (S.opts.mode === 'coop' && !auto) await banner(h.name + '’s turn', 650); else await sleep(200); break; }
-    case 'turnend': V.active = null; break;
-    case 'input': { const h = S.heroes[ev.hero]; if (!human(ev.hero)) { await sleep(480); return HW.aiAct(S, h); } return getInput(h); }
+    case 'turnend': V.active = null; await revealThird(); break;
+    case 'input': { await revealThird(); const h = S.heroes[ev.hero]; if (!human(ev.hero)) { await sleep(480); return HW.aiAct(S, h); } return getInput(h); }
     case 'chooseMove': { const h = S.heroes[ev.hero]; if (!human(ev.hero)) { await sleep(220); return HW.aiMove(S, h, ev); } return getMove(ev); }
     case 'ask': return ask(ev);
     case 'die': await rollDie(ev); break;
@@ -2591,14 +2713,14 @@ async function handle(ev) {
     case 'whisper': say('lil', ev.text); Snd.ghost(); await sleep(1200); break;
     case 'log': addLog(esc(ev.text), ev.cls); await sleep(ev.cls ? 600 : 300); break;
     case 'tip': showTip(ev.text); break;
-    case 'card': if (ev.chime) Snd.chime(ev.chime); hud(); await showCard(ev.card); break;
+    case 'card': if (ev.chime) Snd.chime(ev.chime); if (ev.card.kind === 'clue' || ev.card.kind === 'memory' || (ev.card.kind === 'story' && !ev.chime)) V.journal.push(ev.card); hud(); await showCard(ev.card); break;
     case 'fx': hud(); await fx(ev); break;
     case 'bond': { const a = P('brock'), b = P('wesley'); float({ x: (a.x + b.x) / 2, y: Math.min(a.y, b.y) }, (ev.delta > 0 ? 'Bond +' : 'Bond ') + ev.delta, ev.delta > 0 ? '#ffd98a' : '#ff8a7a', 70); if (ev.delta > 0) Snd.good(); addLog('Bond ' + (ev.delta > 0 ? 'rises' : 'falls') + ' to ' + S.bond + '.', ev.delta > 0 ? 'good' : 'bad'); await sleep(350); break; }
     case 'insight': addLog('Insight ' + (ev.delta > 0 ? '+' : '') + ev.delta + ' (now ' + S.insight + ').', ev.delta > 0 ? 'good' : ''); break;
     case 'clock': hud(); Snd.tick(); await sleep(200); break;
     case 'step': Snd.good(); break;
-    case 'phase': V.active = null; V.status = 'The haunt: Lil\' and the Hollow take their turn.'; hud(); await banner('The Haunt'); break;
-    case 'search': { const b = R.objBox(HW.obj(S, ev.obj)); ring(b.x + b.w / 2, b.y + b.h / 2, 'rgba(255,217,138,A)', 30); Snd.search(); await sleep(350); break; }
+    case 'phase': await revealThird(); V.active = null; V.status = 'The haunt: Lil\' and the Hollow take their turn.'; hud(); await banner('The Haunt'); break;
+    case 'search': { const b = R.objBox(HW.obj(S, ev.obj)), f = ev.found || {}; ring(b.x + b.w / 2, b.y + b.h / 2, 'rgba(255,217,138,A)', 30); Snd.search(); V.fx.push({ x: b.x + b.w / 2, y: b.y + 4, text: 'Token: ' + (f.k === 'clue' ? 'a Clue card' : f.item ? HW.ITEMS[f.item].name : f.k === 'scare' ? 'a cold hand!' : 'nothing'), col: '#ffd98a', t0: now(), dur: 1.9 }); await sleep(650); break; }
     case 'turnface': await sleep(250); break;
     case 'end': await ending(ev.result); break;
   }
@@ -2713,7 +2835,8 @@ function openNotes(view) {
 /* ---------- start, rules, chrome ---------- */
 function begin(opts) {
   gid++; demo = false; S = HW.newGame(opts);
-  Object.assign(V, { anim: {}, fx: [], bubbles: [], beams: [], rings: [], reach: null, cursor: null, hover: null, input: null, active: null, target: null, tip: null, status: '', star: null, hide: null, doorOpen: false, dim: 0, cine: null });
+  Object.assign(V, { anim: {}, fx: [], bubbles: [], beams: [], rings: [], reach: null, cursor: null, hover: null, input: null, active: null, target: null, tip: null, status: '', star: null, hide: null, doorOpen: false, dim: 0, cine: null, journal: [], dealt: false, dealtN: 0, shown3: {}, hideObj: auto ? null : S.obstacle, drawNext: null });
+  $('#draw').hidden = true;
   $('#guide').hidden = true; $('#bigdie').hidden = true; $('#skip').hidden = true; $('#caption').classList.remove('on');
   $('#log').innerHTML = ''; $('#start').hidden = true; $('#modal').hidden = true; hidePop();
   document.querySelectorAll('#haunt td.hit').forEach(td => td.classList.remove('hit'));
@@ -2721,7 +2844,8 @@ function begin(opts) {
 }
 function startScreen() {
   gid++; demo = true; auto = false; S = HW.newGame({ guided: true, seed: 7 });
-  Object.assign(V, { input: null, reach: null, target: null, active: null, status: '', star: null, hide: null, doorOpen: false, dim: 0, cine: null, anim: {}, bubbles: [] });
+  Object.assign(V, { input: null, reach: null, target: null, active: null, status: '', star: null, hide: null, doorOpen: false, dim: 0, cine: null, anim: {}, bubbles: [], journal: [], dealt: false, dealtN: 0, shown3: {}, hideObj: null, drawNext: null });
+  $('#draw').hidden = true;
   $('#guide').hidden = true; $('#bigdie').hidden = true; $('#skip').hidden = true; $('#caption').classList.remove('on'); hud();
   const el = $('#start');
   el.innerHTML = '<form class="card" id="startForm"><div class="kick">Chapter I · The Sisters</div><h2>Hollowwood Manor</h2>' +
@@ -2741,7 +2865,7 @@ function startScreen() {
 function rules() {
   const html = '<h4>The night</h4><p>Each round both heroes take a turn, then the haunt moves. A round is 10 minutes. At midnight the cellar opens and the night is lost. It is also lost if both heroes are collapsed at once.</p>' +
     '<h4>Your turn</h4><ul><li>You have 2 actions. Click things on the board, use the buttons, or press the key shown on each button.</li><li><b>The helper card</b> beside your hero lists everything you can do and marks one thing worth trying. Turn it off with the Helper button if you would rather find your own way.</li><li><b>Roll to move</b>: 1–2 moves up to 4, 3–4 up to 5, 5–6 up to 6. Click a lit space or drag the miniature. Stairs link the floors.</li><li><b>Search</b> furniture from a space beside it. Each piece can be searched once. Some hide clues, some hide supplies.</li><li><b>Help your partner</b> from beside him: revive, free from a trap, snap out of possession, steady his nerves, hand over an item.</li><li><b>Hide</b> on a draped space: nothing can touch or see you until your next turn.</li></ul>' +
-    '<h4>Cards</h4><p>Each hero has three cards, done in order: find something, lift the blocked route together, then use what you found. The shared lift needs both heroes beside it, one action each, and it counts for both even if one of you has not finished card I. When both sets are done, the Master Key appears. Unlock the front door from the mat and walk both heroes out.</p>' +
+    '<h4>Cards</h4><p>At the start each hero draws an objective from the Objective deck, and one card from the Shared deck puts the blocked-route piece on the board. Every piece of furniture you can search carries a face-down search token, turned over when you search it. Each hero has three cards, done in order: find something, lift the blocked route together, then use what you found. The shared lift needs both heroes beside it, one action each, and it counts for both even if one of you has not finished card I. When both sets are done, the Master Key appears. Unlock the front door from the mat and walk both heroes out.</p>' +
     '<h4>The haunt</h4><ul><li><b>Lil\'</b> drifts 1 space toward the nearest hero, then rolls. She passes through walls. Ending within 2 spaces of her adds 1 Fright; ending beside her costs a heart. On a 6 she possesses the nearest hero on her floor.</li><li><b>Possession</b>: the possessed hero acts last, and Lil\' spends his first action on sabotage: dropping his end of a lift, throwing an item, or turning on his partner. Snap him out of it first and nothing happens. Either way she shows you a memory, worth 1 Insight.</li><li><b>The Hollow</b> turns and steps by his die. Anyone standing in the pale cone in front of him when the haunt ends gains 1 Fright. Forced Gaze gives 2 to the nearest hero he can see. Whenever a hero loses a heart, he walks 2 spaces toward them.</li><li><b>Fright</b> at 5: lose an action next turn, then reset to 2.</li><li><b>Entity Traps</b> creep 1 space toward anyone within 5. <b>The record player</b> counts 3, 2, 1, then throws anyone within 2 spaces and takes a heart. <b>The Weeping Doll</b> adds 1 Fright within 2 spaces.</li></ul>' +
     '<h4>Brock and Wesley</h4><ul><li><b>Brock, Protection</b>: when Wesley would lose a heart, Brock may appear beside him and take it. It costs 1 action, from this turn or his next. Once a round.</li><li><b>Wesley, Insight</b>: spend 1 to reroll any die, including the haunt\'s. Spend 2 to Deduce a thinking task instantly. Clues and Lil\'s memories give Insight.</li><li><b>Bond</b> grows when they help each other and finish cards. At 3, ending a turn side by side removes 1 Fright from each. At 6, Protection is free and help reaches 2 spaces.</li></ul>';
   showCard({ kind: 'story', cls: 'rules', title: 'How to Play', sub: 'Rules of the house', html }, [{ label: 'Close', value: true }]);

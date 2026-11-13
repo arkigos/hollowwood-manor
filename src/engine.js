@@ -505,6 +505,14 @@ function options(S, h) {
 }
 const sameOpt = (a, b) => a.type === b.type && a.obj === b.obj && a.help === b.help && a.item === b.item && a.target === b.target;
 
+// How much longer is the way to `goal` because the blocked route has not been lifted yet?
+function routeInfo(S, h, goal) {
+  if (S.coopDone || !goal.length) return null;
+  const ob = obj(S, S.obstacle), dist = () => { const n = bfs(S, goal, { noTraps: true }).get(key(h)); return n ? n.d : 1e9; };
+  const long = dist(), saved = S.block, freed = (ob.id === 'cabinet' ? [[11, 2]] : ob.t).map(([c, r]) => key(ob.f, c, r));
+  S.block = new Set([...saved].filter(k => !freed.includes(k))); const short = dist(); S.block = saved;
+  return long - short >= 4 ? { long, short, name: ob.name.toLowerCase() } : null;
+}
 function hint(S, h) {
   const p = partner(S, h), ch = CHAINS[h.chain];
   if (h.trapped) return 'Caught in the trap. Break free (roll ' + CFG.trapBreak[h.id] + '+), or ' + p.name + ' can free you.';
@@ -517,7 +525,11 @@ function hint(S, h) {
   }
   const st = stepOf(S, h);
   const where = it => { const l = locate(S, it); if (!l) return ''; if (l.where === 'ground') return 'It was thrown. Walk over it to pick it up.'; if (l.where === 'hero' && l.id !== h.id) return p.name + ' is carrying it. Stand beside him so he can hand it over.'; return ''; };
-  if (st === 'find') return ch.findTitle + ': ' + (where(ch.item) || ch.findText);
+  if (st === 'find') {
+    const l = locate(S, ch.item); let out = ch.findTitle + ': ' + (where(ch.item) || ch.findText);
+    if (l && l.where === 'obj') { const ri = routeInfo(S, h, adjTilesOfObj(S, obj(S, l.id))); if (ri) out += ' The ' + ri.name + ' is in the way: ' + ri.long + ' spaces round, or ' + ri.short + ' once you and ' + p.name + ' lift it.'; }
+    return out;
+  }
   if (st === 'coop') { const ob = obj(S, S.obstacle); return 'Shared task: meet ' + p.name + ' at the ' + ob.name + ' and lift it together. One action each.'; }
   if (st === 'use') return ch.useTitle + ': ' + (h.inv.includes(ch.item) ? ch.useText : where(ch.item));
   return 'Your cards are done. Help ' + p.name + ', or search the rooms for clues.';
@@ -688,7 +700,7 @@ function* walk(S, h, path) {
 function* doSearch(S, h, o) {
   h.actions--; S.searched[o.id] = true;
   const L = S.loot[o.id] || { k: 'dust' };
-  yield { t: 'search', hero: h.id, obj: o.id };
+  yield { t: 'search', hero: h.id, obj: o.id, found: L };
   if (L.k === 'chain') {
     const mine = CHAINS[h.chain].item === L.item;
     yield { t: 'log', cls: 'good', text: h.name + ' finds the ' + ITEMS[L.item].name + ' in the ' + o.name + '.' };
@@ -1227,7 +1239,7 @@ function aiAnswer(S, ev) {
   return false;
 }
 
-root.HW = { CFG, MAPS, W, H, DIRS, STAIRS, HIDES, EXITS, DOORFRONT, ITEMS, CHAINS, CLUES, STORY, LINES, GHOST_NAMES, HOLLOW_NAMES,
+root.HW = { MEMORIES, routeInfo, CFG, MAPS, W, H, DIRS, STAIRS, HIDES, EXITS, DOORFRONT, ITEMS, CHAINS, CLUES, STORY, LINES, GHOST_NAMES, HOLLOW_NAMES,
   key, same, cheb, roomAt, newGame, game, options, hint, reach, gazeTiles, stepOf, tier, obj, fmtTime, locate, adjObj, adjTilesOfObj, isExit, isDoorFront,
   aiAct, aiMove, aiAnswer, canReroll, movePts, partner, heroList, awake, bfs };
 })(typeof window !== 'undefined' ? window : globalThis);
