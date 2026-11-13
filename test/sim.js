@@ -24,7 +24,7 @@ const chains = Object.keys(HW.CHAINS);
 const N = +process.argv[2] || 150;
 let total = 0, wins = 0; const causes = {}; const rows = []; const agg = {};
 for (const a of chains) for (const b of chains) {
-  if (a === b) continue;
+  if (a === b || (!HW.CHAINS[a].brain && !HW.CHAINS[b].brain)) continue; // every deal has one thinking task
   for (const coop of ['A', 'B']) {
     let w = 0, rounds = 0, stalled = 0; const c = {};
     for (let i = 0; i < N; i++) {

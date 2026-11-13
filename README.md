@@ -12,7 +12,7 @@ Open `dist/index.html` in any modern browser. No install, no server.
 
 - Click things on the board (your miniature, furniture, your partner, the front door), or use the action buttons.
 - After rolling, click a lit space or drag the miniature to it.
-- Keyboard: `M` roll to move, arrows + `Enter` to pick a space, `F` to jump the cursor between floors, `1`–`9` for the numbered actions, `E` end turn, `R` reroll, `Esc` stay put.
+- Keyboard: `M` roll to move, arrows + `Enter` to pick a space, `F` to jump the cursor between floors, `1`–`9` for the numbered actions, `E` end turn, `R` flip the Lucky Sixpence (if you hold it), `Esc` stay put.
 
 - The helper card beside the active hero lists every action and marks one worth trying. The Helper button turns it off.
 - `N` (or the Notes button) opens a playtest note. Each note records the time on the clock, the round, the deal and where both heroes were.

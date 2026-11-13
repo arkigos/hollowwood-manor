@@ -54,7 +54,7 @@ console.log('Protection is once per round, and declined hits land on Wesley');
 
 console.log('Possession sabotage: a carried item is thrown, stays on the board, and can be recovered');
 {
-  const g = mk({}, S => { const w = S.heroes.wesley; at(w, 'G', 9, 5); at(S.heroes.brock, 'G', 3, 6); w.possessed = true; w.inv.push('cipher'); w.got = true; at(S.ghost, 'U', 16, 2); S.ghost.entranced = 9; });
+  const g = mk({}, S => { const w = S.heroes.wesley; at(w, 'G', 9, 5); at(S.heroes.brock, 'G', 3, 6); w.possessed = true; w.inv.push('cipher'); w.got = true; at(S.ghost, 'U', 16, 2); S.ghost.entranced = 9; S.traps = []; });
   let order = [], thrown = null, wesActions = null;
   g.run((ev, S) => {
     if (ev.t === 'input') { order.push(ev.hero); if (ev.hero === 'wesley' && wesActions == null) { wesActions = S.heroes.wesley.actions; thrown = S.ground.find(x => x.item === 'cipher'); return { type: 'move' }; } return end; }
@@ -143,7 +143,7 @@ console.log('Thinking tasks, Deduction and rewards');
 
 console.log('Traps, collapse and revival');
 {
-  const g = mk({}, S => { at(S.heroes.wesley, 'G', 5, 1); at(S.heroes.brock, 'G', 4, 2); S.ghost.entranced = 9; });
+  const g = mk({}, S => { at(S.heroes.wesley, 'G', 5, 1); at(S.heroes.brock, 'G', 4, 2); S.ghost.entranced = 9; S.traps = [{ id: 0, f: 'G', c: 4, r: 1, dormant: 0, holding: null }]; });
   g.run((ev, S) => { if (ev.t === 'input') return ev.hero === 'wesley' && !S.heroes.wesley.trapped ? { type: 'move' } : end; if (ev.t === 'chooseMove') return ev.tiles.find(t => t.trap) || null; }, ev => ev.t === 'turnend' && ev.hero === 'wesley');
   ok(g.S.heroes.wesley.trapped, 'Stepping onto the Entity Trap immobilises the hero');
   ok(!HW.options(g.S, g.S.heroes.wesley).some(x => x.type === 'move'), 'A trapped hero has no move action');
@@ -169,6 +169,86 @@ console.log('Endings');
   let asked = false;
   const e4 = g4.run((ev) => { if (ev.t === 'input') return { type: 'move' }; if (ev.t === 'chooseMove') return ev.tiles.find(t => t.exit) || null; if (ev.t === 'ask' && ev.kind === 'abandon') { asked = true; return true; } }, ev => ev.t === 'end');
   ok(asked && e4 && e4.result.result === 'abandoned', 'Leaving a collapsed partner asks first, then gives the lonely ending');
+}
+
+console.log('What never moves: traps, the blue hand, the Weeping Doll');
+{
+  const trapAt = (f, c, r) => [{ id: 0, f, c, r, dormant: 0, holding: null }];
+  const g = mk({}, S => { S.ghost.entranced = 99; });
+  const before = JSON.stringify(g.S.traps.map(t => [t.f, t.c, t.r]));
+  g.run(() => end, ev => ev.t === 'round' && ev.n === 6);
+  ok(g.S.traps.length === 5 && JSON.stringify(g.S.traps.map(t => [t.f, t.c, t.r])) === before, 'Five Entity Traps are set out and none of them moves');
+
+  const walkIn = (prep, protect) => {
+    const x = mk({ deal: { brock: 'clock', wesley: 'lullaby', coop: 'B' } }, S => { at(S.heroes.wesley, 'U', 14, 4); at(S.heroes.brock, 'G', 3, 6); S.ghost.entranced = 99; at(S.hollow, 'U', 2, 7); S.forceDice = [4, 3]; if (prep) prep(S); });
+    let moved = false;
+    x.run((ev, S) => {
+      if (ev.t === 'input') { if (ev.hero === 'wesley' && !moved) { moved = true; return { type: 'move' }; } return end; }
+      if (ev.t === 'chooseMove') return ev.tiles.find(t => HW.inRec(S, t)) || null;
+      if (ev.t === 'ask') return !!protect;
+    }, ev => ev.t === 'turnend' && ev.hero === 'wesley');
+    return x;
+  };
+  const a = walkIn(), w = a.S.heroes.wesley;
+  ok(w.hearts === 2 && w.f === 'U' && w.c === HW.MARKS[2][0] && w.r === HW.MARKS[2][1], 'Coming within 2 spaces of the record player costs a heart and throws him to the rolled chalk mark');
+  ok(a.log.some(e => e.t === 'die' && e.what === 'thrown to mark 3'), 'The throw is decided by a die roll');
+  ok(a.log.some(e => e.t === 'chooseMove' && e.tiles.some(t => t.hand)), 'Spaces in the hand\'s reach are flagged before he chooses');
+  const b = walkIn(S => { S.heroes.wesley.inv.push('record'); S.heroes.wesley.got = true; });
+  ok(b.S.heroes.wesley.hearts === 3 && HW.inRec(b.S, b.S.heroes.wesley), 'Whoever carries Lil\'s Record is safe from the hand');
+  const c = walkIn(null, true);
+  ok(c.S.heroes.wesley.hearts === 3 && c.S.heroes.brock.hearts === 3 && HW.inRec(c.S, c.S.heroes.wesley), 'Brock can take the hand\'s grip for him, and then nobody is thrown');
+
+  const d = mk({}, S => { at(S.heroes.wesley, 'U', 5, 4); at(S.heroes.brock, 'G', 3, 6); S.ghost.entranced = 99; at(S.ghost, 'G', 17, 7); at(S.hollow, 'U', 16, 7); S.hollow.dir = 1; S.traps = []; S.forceDice = [4, 4, 4, 4]; });
+  let n = 0; const fr = [];
+  d.run((ev, S) => {
+    if (ev.t === 'input') { if (ev.hero !== 'wesley') return end; fr.push(S.heroes.wesley.fright); return n++ < 4 ? { type: 'move' } : end; }
+    if (ev.t === 'chooseMove') { const inside = HW.inDoll(S, S.heroes.wesley); return ev.tiles.find(t => t.c <= 5 && t.f === 'U' && HW.inDoll(S, t) !== inside) || null; }
+  }, ev => ev.t === 'round' && ev.n === 3);
+  ok(fr[1] === 1, 'Coming within 2 spaces of the Weeping Doll gives 1 Fright at once (' + fr + ')');
+  ok(fr[2] === 1 && fr[3] === 2, 'She frightens a hero once a round, and again the next round');
+  const e = mk({}, S => { at(S.heroes.wesley, 'U', 5, 4); S.ghost.entranced = 99; S.traps = []; });
+  const R = HW.reach(e.S, e.S.heroes.wesley, 5).tiles;
+  ok(R.some(t => t.doll) && R.some(t => t.r === 1 && t.c === 5 && !t.doll), 'The board offers a way round the doll where there is one');
+
+  const f = mk({}, S => { const w2 = S.heroes.wesley; at(w2, 'G', 11, 6); at(S.heroes.brock, 'G', 3, 6); w2.possessed = true; w2.inv.push('cipher'); w2.got = true; S.traps = trapAt('G', 10, 5); at(S.ghost, 'U', 16, 2); S.ghost.entranced = 99; });
+  f.run(() => end, ev => ev.t === 'phase');
+  ok(f.S.heroes.wesley.trapped && f.S.heroes.wesley.inv.includes('cipher'), 'A possessed hero near a trap is walked into it');
+}
+
+console.log('The hunt: card I names a room, and the tokens decide the rest');
+{
+  let bad = 0;
+  for (const a of Object.keys(HW.CHAINS)) for (const b of Object.keys(HW.CHAINS)) for (let seed = 1; seed < 40; seed++) {
+    if (a === b) continue;
+    const S = HW.newGame({ guided: false, seed, deal: { brock: a, wesley: b, coop: seed % 2 ? 'A' : 'B' } });
+    const L = Object.values(S.loot), n = k => L.filter(x => x.k === k).length;
+    if (L.length !== 15 || n('chain') !== 2 || n('clue') !== 3 || n('loot') !== 8 || n('scare') !== 2) bad++;
+    for (const id of [a, b]) { const ch = HW.CHAINS[id], holder = Object.keys(S.loot).find(o => S.loot[o].item === ch.item); if (!HW.roomPieces(S, ch.room).some(o => o.id === holder)) bad++; }
+  }
+  ok(bad === 0, 'Every night has 15 tokens: 2 objective items in their own rooms, 8 items, 3 lore, 2 cold hands');
+  let brainless = 0; for (let seed = 1; seed < 300; seed++) { const S = HW.newGame({ guided: false, seed }); if (!HW.CHAINS[S.deal.brock].brain && !HW.CHAINS[S.deal.wesley].brain) brainless++; }
+  ok(brainless === 0, 'Every shuffled deal includes a thinking task for Wesley\'s Deduction');
+  const g = mk({ guided: true }, S => { at(S.heroes.wesley, 'G', 15, 4); at(S.heroes.brock, 'G', 3, 6); S.ghost.entranced = 99; });
+  const l0 = HW.locate(g.S, 'cipher');
+  ok(l0.where === 'room' && l0.room === 'Study' && l0.objs.length === 3, 'Before any search the Cipher Page is known only to be in the Study');
+  g.run((ev, S) => { if (ev.t === 'input') return (ev.hero === 'wesley' && HW.options(S, S.heroes.wesley).find(x => x.type === 'search' && x.obj === 'desk')) || end; }, ev => ev.t === 'turnend' && ev.hero === 'wesley');
+  ok(!g.S.heroes.wesley.got && g.S.clues.lucien && HW.locate(g.S, 'cipher').objs.length === 2, 'A wrong token still gives something (here, lore), and narrows the hunt');
+  ok(g.S.insight === 3, 'Wesley starts with 2 Insight, and lore gives him 1 more');
+}
+
+console.log('Found items: the Lucky Sixpence and the Pouch of Salt');
+{
+  const g = mk({}, S => { S.insight = 4; S.ghost.entranced = 99; S.forceDice = [1, 6]; });
+  let offered = null;
+  g.run((ev) => { if (ev.t === 'input') return ev.hero === 'brock' ? { type: 'move' } : end; if (ev.t === 'chooseMove') { offered = ev.canReroll; return null; } }, ev => ev.t === 'turnend' && ev.hero === 'brock');
+  ok(offered === false, 'Insight no longer rerolls dice');
+  const g2 = mk({}, S => { S.heroes.wesley.inv.push('sixpence'); S.ghost.entranced = 99; S.forceDice = [1, 6]; });
+  const rolls = [];
+  g2.run((ev) => { if (ev.t === 'input') return ev.hero === 'brock' && !rolls.length ? { type: 'move' } : end; if (ev.t === 'chooseMove') { rolls.push(ev.roll); return ev.canReroll ? { reroll: true } : null; } }, ev => ev.t === 'turnend' && ev.hero === 'brock');
+  ok(rolls.join() === '1,6' && !g2.S.heroes.wesley.inv.includes('sixpence'), 'The Lucky Sixpence rerolls one die for either hero and is discarded');
+  const g3 = mk({}, S => { at(S.heroes.brock, 'G', 9, 5); at(S.heroes.wesley, 'G', 3, 6); at(S.ghost, 'G', 11, 5); S.heroes.brock.inv.push('salt'); S.traps = []; S.forceDice = [1]; });
+  g3.run((ev, S) => { if (ev.t === 'input') return (ev.hero === 'brock' && HW.options(S, S.heroes.brock).find(x => x.item === 'salt')) || end; if (ev.t === 'ask') return false; }, ev => ev.t === 'round' && ev.n === 2);
+  ok(g3.S.ghost.c === 11 && g3.S.ghost.r === 5 && g3.S.heroes.brock.hearts === 4 && !g3.S.heroes.brock.inv.includes('salt'), 'The Pouch of Salt holds Lil\' where she stands for one haunt');
 }
 
 console.log('Modes');

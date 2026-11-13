@@ -295,19 +295,18 @@ const DRAW = {
     const X = b.x + T / 2, rec = S.record;
     box(g, b.x + 8, b.y + 10, T - 16, TY - 15, 14, '#4d2e19', '#341e10');
     const ty0 = b.y + 4; g.fillStyle = '#0d0c0e'; ell(g, X + 2, ty0, 9.5, 5); g.fill(); g.fillStyle = '#7a2233'; ell(g, X + 2, ty0, 3, 1.6); g.fill();
-    const sp = rec.calmed ? t * 2.2 : rec.timer <= 1 ? t * 7 : t * 0.6; g.strokeStyle = 'rgba(255,255,255,.3)'; g.lineWidth = 0.8; g.beginPath(); g.ellipse(X + 2, ty0, 7, 3.7, 0, sp, sp + 0.9); g.stroke();
+    const sp = rec.calmed ? t * 2.2 : t * 0.8; g.strokeStyle = 'rgba(255,255,255,.3)'; g.lineWidth = 0.8; g.beginPath(); g.ellipse(X + 2, ty0, 7, 3.7, 0, sp, sp + 0.9); g.stroke();
     const mx = X - 7, my = b.y - 22; // the horn
     g.fillStyle = '#8a6f3c'; poly(g, [X + 6, ty0 - 1, X + 9, ty0 - 3, mx + 9, my - 6, mx - 6, my + 8]); g.fill();
     g.fillStyle = '#c9a45c'; ell(g, mx, my, 11, 9.5); g.fill(); g.fillStyle = '#e3c684'; ell(g, mx - 1, my - 1, 9, 7.5); g.fill(); g.fillStyle = '#120c08'; ell(g, mx, my, 6.5, 5.5); g.fill();
     if (rec.calmed) { g.fillStyle = 'rgba(233,225,204,.8)'; g.font = '11px serif'; g.textAlign = 'center'; for (let i = 0; i < 2; i++) { const k = (t * 0.4 + i * 0.5) % 1; g.globalAlpha = 1 - k; g.fillText('♪', mx - 6 - k * 10 + i * 12, my - 6 - k * 16); } g.globalAlpha = 1; return; }
-    const reachK = (CFG.recordTimer - rec.timer) / (CFG.recordTimer - 1), len = 4 + reachK * 15 + Math.sin(t * 3) * 1.5;
+    const close = HW.heroList(S).some(h => HW.awake(h) && h.f === 'U' && Math.abs(h.c - o.t[0][0]) + Math.abs(h.r - o.t[0][1]) <= CFG.recordRange + 2), reachK = close ? 1 : 0.55, len = 4 + reachK * 15 + Math.sin(t * (close ? 6 : 3)) * 1.5; // the hand is always out, and strains when someone is near
     if (reachK > 0) {
       const hx = mx - len * 0.75, hy = my + len * 0.7;
       g.strokeStyle = '#a9d8ff'; g.lineCap = 'round'; g.lineWidth = 3.4; g.beginPath(); g.moveTo(mx, my); g.quadraticCurveTo(mx - len * 0.2, my + len * 0.6, hx, hy); g.stroke();
       g.lineWidth = 1.3; for (let i = 0; i < 4; i++) { const a = 2.0 + i * 0.32 + Math.sin(t * 5 + i) * 0.12; g.beginPath(); g.moveTo(hx, hy); g.lineTo(hx + Math.cos(a) * 6, hy + Math.sin(a) * 6); g.stroke(); }
       g.lineCap = 'butt'; g.fillStyle = '#c9e7ff'; circ(g, hx, hy, 2.4); g.fill();
     }
-    for (let i = 0; i < CFG.recordTimer; i++) { g.fillStyle = i < rec.timer ? '#a9d8ff' : 'rgba(169,216,255,.2)'; circ(g, X - 6 + i * 7, b.y - 38, 2.2); g.fill(); }
   },
   piano(g, o, b) {
     box(g, b.x + 3, b.y + 4, b.w - 6, TY - 8, 19, '#0e0d10', '#1b1a20');
@@ -345,6 +344,8 @@ function glyph(g, item, x, y, s) {
     case 'windkey': g.strokeStyle = '#c9a45c'; g.lineWidth = 1.5; circ(g, -3.5, 0, 2); g.stroke(); circ(g, -3.5, -3.6, 2); g.stroke(); g.beginPath(); g.moveTo(-1.5, -1.8); g.lineTo(5, -1.8); g.stroke(); g.fillStyle = '#c9a45c'; g.fillRect(3.5, -3, 2, 2.6); break;
     case 'masterkey': g.strokeStyle = '#ffd98a'; g.lineWidth = 1.7; circ(g, -3.5, 0, 2.6); g.stroke(); g.beginPath(); g.moveTo(-0.9, 0); g.lineTo(6, 0); g.moveTo(4, 0); g.lineTo(4, 2.8); g.moveTo(6, 0); g.lineTo(6, 2.2); g.stroke(); break;
     case 'salts': g.fillStyle = '#7fb3a8'; g.fillRect(-2.5, -2, 5, 7); g.fillStyle = '#c9a45c'; g.fillRect(-1.5, -5, 3, 3); break;
+    case 'sixpence': g.fillStyle = '#cfd4da'; circ(g, 0, 0, 4.6); g.fill(); g.strokeStyle = '#7d848c'; g.lineWidth = 0.9; circ(g, 0, 0, 3.1); g.stroke(); break;
+    case 'salt': g.fillStyle = '#d9cdb0'; poly(g, [-4, 5, 4, 5, 5, -1, -5, -1]); g.fill(); poly(g, [-2.5, -2.5, 2.5, -2.5, 3.5, -5.5, -3.5, -5.5]); g.fill(); g.fillStyle = '#8a6f3c'; g.fillRect(-3, -2.6, 6, 1.6); break;
     case 'bandage': g.fillStyle = '#efe6d0'; rrect(g, -5, -2.5, 10, 5, 2); g.fill(); g.fillStyle = '#dc6253'; g.fillRect(-0.8, -2.2, 1.6, 4.4); g.fillRect(-2.2, -0.8, 4.4, 1.6); break;
   }
   g.restore();
@@ -530,13 +531,15 @@ function render(S, V) {
 
   // floor overlays
   if (!S.hollow._hide) for (const p of HW.gazeTiles(S)) { g.fillStyle = `rgba(238,238,255,${0.09 + Math.sin(t * 2 + p.c + p.r) * 0.025})`; g.fillRect(tx(p.c) + 1, ty(p.f, p.r) + 1, T - 2, TY - 2); }
-  const gp = HW.obj(S, 'gramophone').t[0];
-  if (!S.record.calmed && S.record.timer <= 1) for (let r = 1; r < H - 1; r++) for (let c = 1; c < W - 1; c++) if (MAPS.U[r][c] !== '#' && Math.max(Math.abs(c - gp[0]), Math.abs(r - gp[1])) <= CFG.recordRange) { g.fillStyle = `rgba(120,190,255,${0.14 + Math.sin(t * 6) * 0.06})`; g.fillRect(tx(c) + 1, ty('U', r) + 1, T - 2, TY - 2); }
-  const dp = HW.obj(S, 'doll').t[0];
-  if (HW.heroList(S).some(h => h.f === 'U' && h.c <= 6 && HW.awake(h))) for (let r = 1; r < H - 1; r++) for (let c = 1; c < 6; c++) if (Math.max(Math.abs(c - dp[0]), Math.abs(r - dp[1])) <= CFG.dollRange) { g.fillStyle = 'rgba(143,196,242,.07)'; g.fillRect(tx(c) + 1, ty('U', r) + 1, T - 2, TY - 2); }
+  // the reach of the fixed hazards is marked on the floor, and so are the six chalk marks the blue hand throws to
+  if (!S.record.calmed) for (let r = 1; r < H - 1; r++) for (let c = 1; c < W - 1; c++) if (MAPS.U[r][c] !== '#' && HW.inRec(S, { f: 'U', c, r })) { g.fillStyle = `rgba(120,190,255,${0.24 + Math.sin(t * 2.5 + c + r) * 0.06})`; g.fillRect(tx(c) + 1, ty('U', r) + 1, T - 2, TY - 2); }
+  for (let r = 1; r < H - 1; r++) for (let c = 1; c < W - 1; c++) if (MAPS.U[r][c] !== '#' && HW.inDoll(S, { f: 'U', c, r })) { g.fillStyle = `rgba(196,174,255,${0.17 + Math.sin(t * 1.5 + c - r) * 0.04})`; g.fillRect(tx(c) + 1, ty('U', r) + 1, T - 2, TY - 2); }
+  g.font = 'italic 14px "IM Fell English", serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  HW.MARKS.forEach(([c, r], i) => { const x = cx(c), y = cy('U', r); g.strokeStyle = 'rgba(222,232,244,.7)'; g.lineWidth = 1.2; g.setLineDash([3, 3]); ell(g, x, y, 13.5, 8); g.stroke(); g.setLineDash([]); g.fillStyle = 'rgba(232,240,250,.95)'; g.fillText(String(i + 1), x, y + 0.5); });
   if (V.reach) for (const tl of V.reach.tiles) {
     const p = Math.sin(t * 4 + tl.c * 0.7 + tl.r) * 0.5 + 0.5;
-    if (tl.trap) tileRing(g, tl.f, tl.c, tl.r, 'rgba(220,98,83,.95)', 'rgba(220,98,83,.2)');
+    if (tl.trap || tl.hand) tileRing(g, tl.f, tl.c, tl.r, 'rgba(220,98,83,.95)', 'rgba(220,98,83,.2)');
+    else if (tl.doll) tileRing(g, tl.f, tl.c, tl.r, 'rgba(196,174,255,.95)', 'rgba(196,174,255,.2)');
     else if (tl.exit) tileRing(g, tl.f, tl.c, tl.r, '#bfe0ff', 'rgba(160,200,255,.4)', 2);
     else tileRing(g, tl.f, tl.c, tl.r, `rgba(255,217,138,${0.65 + p * 0.3})`, `rgba(255,200,110,${0.16 + p * 0.1})`);
   }
@@ -566,6 +569,8 @@ function render(S, V) {
   drawLight(S, V, t);
 
   // things that show in the dark
+  g.lineWidth = 1; // the edges of the hazards' reach stay readable in unlit rooms
+  for (let r = 1; r < H - 1; r++) for (let c = 1; c < W - 1; c++) { if (MAPS.U[r][c] === '#') continue; const q = { f: 'U', c, r }, a = !S.record.calmed && HW.inRec(S, q), b = HW.inDoll(S, q); if (!a && !b) continue; g.strokeStyle = a ? 'rgba(140,200,255,.34)' : 'rgba(200,180,255,.26)'; g.strokeRect(tx(c) + 2.5, ty('U', r) + 2.5, T - 5, TY - 5); }
   for (const tr of S.traps) if (!V.anim['trap' + tr.id]) trapEyes(g, tr, S, t);
   // face-down search tokens sit on every piece of furniture that has not been searched
   g.font = '700 9px "Alegreya Sans", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
@@ -573,7 +578,7 @@ function render(S, V) {
     const b = objBox(o), x = b.x + b.w - 8, y = b.y + 8;
     g.fillStyle = 'rgba(0,0,0,.55)'; circ(g, x + 1, y + 2, 6.5); g.fill(); g.fillStyle = '#3a2a1c'; circ(g, x, y, 6.2); g.fill(); g.strokeStyle = '#c9a45c'; g.lineWidth = 1.3; g.stroke(); g.fillStyle = '#ffd98a'; g.fillText('?', x, y + 0.5);
   }
-  if (V.target) { const o = V.target, k = Math.sin(t * 3.5) * 0.5 + 0.5; g.strokeStyle = `rgba(255,217,138,${0.5 + k * 0.5})`; g.lineWidth = 2; g.setLineDash([5, 4]); g.lineDashOffset = -t * 12; rrect(g, o.x - 2, o.y - 2, o.w + 4, o.h + 4, 5); g.stroke(); g.setLineDash([]); g.fillStyle = '#ffd98a'; const mx = o.x + o.w / 2, my = o.y - 9 - k * 4; poly(g, [mx - 5, my - 5, mx + 5, my - 5, mx, my + 2]); g.fill(); }
+  for (const o of V.target ? [].concat(V.target) : []) { const k = Math.sin(t * 3.5) * 0.5 + 0.5; g.strokeStyle = `rgba(255,217,138,${0.5 + k * 0.5})`; g.lineWidth = 2; g.setLineDash([5, 4]); g.lineDashOffset = -t * 12; rrect(g, o.x - 2, o.y - 2, o.w + 4, o.h + 4, 5); g.stroke(); g.setLineDash([]); g.fillStyle = '#ffd98a'; const mx = o.x + o.w / 2, my = o.y - 9 - k * 4; poly(g, [mx - 5, my - 5, mx + 5, my - 5, mx, my + 2]); g.fill(); }
   if (V.star) { const x = cx(V.star.c), y = cy(V.star.f, V.star.r), k = Math.sin(t * 4) * 0.5 + 0.5; g.strokeStyle = 'rgba(255,255,255,.95)'; g.lineWidth = 2.2; ell(g, x, y, 16 + k * 2, 9.5 + k); g.stroke(); g.fillStyle = '#ffd98a'; g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 1; const my = y - 15 - k * 4; g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? 3 : 7; g.lineTo(x + Math.cos(a) * rr, my + Math.sin(a) * rr); } g.closePath(); g.fill(); g.stroke(); }
   if (V.hover && V.hover.box) { const o = V.hover.box; g.strokeStyle = '#fff'; g.lineWidth = 1.6; rrect(g, o.x - 1, o.y - 1, o.w + 2, o.h + 2, 4); g.stroke(); }
   for (const bm of V.beams) { const k = 1 - (t - bm.t0) / bm.dur; if (k <= 0) continue; const a = posOf(S, V, 'hollow'), b = posOf(S, V, bm.id); g.strokeStyle = `rgba(245,245,255,${k * (bm.forced ? 0.9 : 0.6)})`; g.lineWidth = bm.forced ? 3 : 1.6; g.beginPath(); g.moveTo(a.x - 3, a.y - 63); g.lineTo(b.x, b.y - 36); g.moveTo(a.x + 3, a.y - 63); g.lineTo(b.x, b.y - 36); g.stroke(); }

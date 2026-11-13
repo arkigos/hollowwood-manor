@@ -50,7 +50,7 @@ function updateHint() {
   let html = '', cls = '';
   if (V.cine) html = 'Click the board or press Space to move on. Esc skips the opening.';
   else if (V.tip && V.tip.until > V.t && !(V.reach && V.reach.res)) { html = '<b>How it works</b> · ' + esc(V.tip.text); cls = 'tip'; }
-  else if (V.reach && V.reach.res) { const h = S.heroes[V.reach.hero]; cls = 'move'; html = '<span><b>' + h.name + ' rolled ' + V.reach.roll + '.</b> Click a lit space, or drag ' + h.name + ' there. Up to ' + V.reach.pts + ' spaces.' + (V.star ? ' The star marks a good spot.' : '') + '</span><button class="hbtn" type="button" data-mv="stay">Stay put</button>' + (V.reach.canReroll ? '<button class="hbtn" type="button" data-mv="reroll">Reroll · 1 Insight</button>' : ''); }
+  else if (V.reach && V.reach.res) { const h = S.heroes[V.reach.hero]; cls = 'move'; html = '<span><b>' + h.name + ' rolled ' + V.reach.roll + '.</b> Click a lit space, or drag ' + h.name + ' there. Up to ' + V.reach.pts + ' spaces.' + (V.star ? ' The star marks a good spot.' : '') + '</span><button class="hbtn" type="button" data-mv="stay">Stay put</button>' + (V.reach.canReroll ? '<button class="hbtn" type="button" data-mv="reroll">Flip the Lucky Sixpence</button>' : ''); }
   else if (V.flash && V.flash.until > V.t) html = esc(V.flash.text);
   else if (V.input) { const h = S.heroes[V.input.hero]; html = '<b>' + h.name + '</b> · ' + esc(HW.hint(S, h)); }
   else html = esc(V.status || '');
@@ -79,10 +79,11 @@ async function rollDie(ev) {
   document.querySelectorAll('#haunt td.hit').forEach(td => { if (isG ? !td.classList.contains('ho') : isH ? td.classList.contains('ho') : true) td.classList.remove('hit'); });
   const side = isG ? '#dieGhost' : isH ? '#dieHollow' : '#dieHero', who = isG ? 'Lil\'' : isH ? 'The Hollow' : h.name;
   $(side + 'T').textContent = who + ' rolls…'; spinDie($(side), ev.value);
-  const what = isG || isH ? esc(ev.name) : ev.pts ? 'move up to ' + ev.pts : ev.need ? (ev.value >= ev.need ? 'free!' : 'needs ' + ev.need + '+') : '';
+  const what = isG || isH ? esc(ev.name) : ev.what ? esc(ev.what) : ev.pts ? 'move up to ' + ev.pts : ev.need ? (ev.value >= ev.need ? 'free!' : 'needs ' + ev.need + '+') : '';
   await bigDie(ev.who, ev.value, '<b>' + ev.value + '</b>' + (isG || isH ? esc(who) + ': ' : '') + what);
   $(side + 'T').innerHTML = esc(who) + ': <b>' + ev.value + '</b> ' + what;
   if (isG || isH) { const td = document.querySelector('#haunt td[data-' + (isG ? 'g' : 'h') + '="' + ev.value + '"]'); if (td) td.classList.add('hit'); addLog(esc(who) + ' rolls ' + ev.value + ': ' + esc(ev.name) + '.', isG ? 'ghost' : 'hollow'); }
+  else if (ev.what) addLog(h.name + ' rolls ' + ev.value + ': ' + esc(ev.what) + '.', 'hazard');
   else if (ev.pts) addLog(h.name + ' rolls ' + ev.value + ' and may move up to ' + ev.pts + '.');
 }
 
@@ -120,13 +121,13 @@ function hud() {
       (up ? '<li class="' + (h.useDone ? 'done' : 'cur') + '" title="' + esc(ch.useText) + '"><i>III</i><span>' + esc(ch.useTitle) + (ch.work > 1 && !h.useDone ? ' · ' + h.useWork + '/' + ch.work : '') + (ch.brain ? ' · thinking' : '') + '</span></li>'
         : '<li class="down" title="Revealed when cards I and II are done."><i>III</i><span>Face down</span></li>') +
       '</ol>' +
-      '<div class="abil">' + (h.id === 'brock' ? '<b>Protection.</b> When Wesley would lose a heart, Brock may step in and take it. Costs 1 action, now or next turn.' : '<b>Insight.</b> Spend 1 to reroll any die. Spend 2 to Deduce a thinking task.') + '</div></div>';
+      '<div class="abil">' + (h.id === 'brock' ? '<b>Protection.</b> When Wesley would lose a heart, Brock may step in and take it. Costs 1 action, now or next turn.' : '<b>Deduction.</b> Spend ' + CFG.deduceCost + ' Insight to finish a thinking objective on the spot, from anywhere. Lore and Lil\'s memories give Insight.') + '</div></div>';
   }
   $('#heroes').innerHTML = html;
   document.querySelectorAll('canvas[data-bust]').forEach(c => R.bust(c, c.dataset.bust));
-  let b = ''; for (let i = 0; i < CFG.bondMax; i++) b += '<i class="' + (i < S.bond ? 'on' : '') + (i === 2 || i === 5 ? ' mark' : '') + '"></i>';
+  let b = ''; for (let i = 0; i < CFG.bondMax; i++) b += '<i class="' + (i < S.bond ? 'on' : '') + (i === CFG.bondBackToBack - 1 || i === CFG.bondFriends - 1 ? ' mark' : '') + '"></i>';
   $('#bond').innerHTML = b;
-  $('#bondSub').textContent = S.bond >= CFG.bondFriends ? 'Friends' : S.bond >= CFG.bondBackToBack ? 'Back to Back · Friends at 6' : 'At odds · Back to Back at 3';
+  $('#bondSub').textContent = S.bond >= CFG.bondFriends ? 'Friends' : S.bond >= CFG.bondBackToBack ? 'A truce · friends at ' + CFG.bondFriends : 'At odds · a truce at ' + CFG.bondBackToBack;
   let ins = ''; for (let i = 0; i < CFG.insightCap; i++) ins += '<i class="' + (i < S.insight ? 'on' : '') + '"></i>';
   $('#ins').innerHTML = ins;
   const holder = HW.heroList(S).find(h => h.inv.includes('masterkey'));
@@ -159,7 +160,7 @@ function renderActions() {
   if (V.reach && V.reach.res) {
     el.innerHTML = '<h3>Move · up to ' + V.reach.pts + ' spaces</h3>' +
       '<button class="abtn" data-mv="stay" type="button"><kbd>Esc</kbd><span>Stay where you are</span><span class="cost"></span></button>' +
-      (V.reach.canReroll ? '<button class="abtn" data-mv="reroll" type="button"><kbd>R</kbd><span>Wesley second-guesses it: reroll</span><span class="cost">1 Insight</span></button>' : '');
+      (V.reach.canReroll ? '<button class="abtn" data-mv="reroll" type="button"><kbd>R</kbd><span>Flip the Lucky Sixpence: roll again</span><span class="cost">discard</span></button>' : '');
     return;
   }
   if (V.input) {
@@ -196,8 +197,8 @@ function placeGuide() {
   const right = q.x + 34 * sc, left = q.x - 34 * sc - w; let x = right + w > st.clientWidth - 4 ? left : right;
   const y = Math.max(4, Math.min(st.clientHeight - hh - 4, q.y - hh / 2));
   if (V.target) { // keep the lit objective in view when the other side has room
-    const a = toStage(V.target.x, V.target.y), b = toStage(V.target.x + V.target.w, V.target.y + V.target.h);
-    const hits = xx => a.x < xx + w && b.x > xx && a.y < y + hh && b.y > y;
+    const boxes = [].concat(V.target).map(tb => [toStage(tb.x, tb.y), toStage(tb.x + tb.w, tb.y + tb.h)]);
+    const hits = xx => boxes.some(([a, b]) => a.x < xx + w && b.x > xx && a.y < y + hh && b.y > y);
     if (hits(x)) { const alt = x === right ? left : right; if (alt >= 4 && alt + w <= st.clientWidth - 4 && !hits(alt)) x = alt; }
   }
   el.style.left = Math.max(4, x) + 'px'; el.style.top = y + 'px';
@@ -211,7 +212,7 @@ $('#actions').addEventListener('click', e => {
 });
 
 /* ---------- modal cards ---------- */
-const KICK = { story: 'The Manor', scene: 'Brock & Wesley', clue: 'Clue', memory: 'Lil\' remembers', ask: 'A choice', end: 'Chapter I' };
+const KICK = { story: 'The Manor', scene: 'Brock & Wesley', clue: 'Lore', memory: 'Lil\' remembers', ask: 'A choice', end: 'Chapter I' };
 function cardHTML(card, buttons) {
   let h = '<div class="card ' + (card.kind || 'story') + (card.cls ? ' ' + card.cls : '') + '" role="dialog" aria-modal="true"><div class="kick">' + esc(card.sub || KICK[card.kind] || '') + '</div><h2>' + esc(card.title) + '</h2>';
   if (card.text) h += '<p>' + esc(card.text) + '</p>';
@@ -240,8 +241,8 @@ async function ask(ev) {
       effect: ev.free ? 'Friends: this costs Brock no action. He still loses the heart.' : ev.own ? 'Costs Brock 1 heart and 1 action this turn.' : 'Costs Brock 1 heart now, and 1 action from his next turn.' },
     [{ label: 'Step in', value: true }, { label: 'Let it land', value: false, alt: true }]);
   }
-  if (ev.kind === 'reroll') return showCard({ kind: 'ask', title: 'Second Guess', sub: 'Wesley decides', text: ev.what, effect: 'Wesley can spend 1 Insight to make ' + (ev.who === 'ghost' ? 'Lil\'' : 'the Hollow') + ' roll again. You have ' + S.insight + '.' },
-    [{ label: 'Reroll · 1 Insight', value: true }, { label: 'Let it stand', value: false, alt: true }]);
+  if (ev.kind === 'reroll') return showCard({ kind: 'ask', title: 'The Lucky Sixpence', sub: h.name + ' decides', text: ev.what, effect: h.name + ' can flip the Lucky Sixpence to make ' + (ev.who === 'ghost' ? 'Lil\'' : 'the Hollow') + ' roll again. The coin is then discarded.' },
+    [{ label: 'Flip the sixpence', value: true }, { label: 'Let it stand', value: false, alt: true }]);
   if (ev.kind === 'abandon') { const o = S.heroes[ev.other]; return showCard({ kind: 'ask', title: 'Leave him?', sub: h.name + ' decides', text: o.name + ' is lying somewhere behind you. If ' + h.name + ' steps through that door now, he goes alone.' }, [{ label: 'Stay', value: false }, { label: 'Leave him', value: true, alt: true }]); }
   return false;
 }
@@ -282,6 +283,8 @@ async function fx(ev) {
     case 'trap': ring(p.x, p.y, 'rgba(200,205,215,A)', 36); float(ev.id, 'Trapped', '#ffb7ac'); Snd.snap(); V.shake = now() + 0.2; break;
     case 'gaze': V.beams.push({ id: ev.id, t0: now(), dur: 1.1, forced: ev.forced }); Snd.gaze(); await sleep(350); break;
     case 'record': { const b = R.objBox(HW.obj(S, 'gramophone')); ring(b.x + b.w / 2, b.y + b.h - 10, 'rgba(120,190,255,A)', 110, 1.1); Snd.record(); await sleep(450); break; }
+    case 'doll': { const b = R.objBox(HW.obj(S, 'doll')); ring(b.x + b.w / 2, b.y + b.h / 2, 'rgba(196,174,255,A)', 80, 1); break; }
+    case 'salt': { const q = P('ghost'); ring(q.x, q.y - 10, 'rgba(255,255,255,A)', 54, 1); float(ev.id, 'Salt!', '#e6f1ff'); Snd.search(); break; }
     case 'slam': V.shake = now() + 0.5; Snd.thud(); if (ob) ring(ob.x + ob.w / 2, ob.y + ob.h / 2, 'rgba(255,255,255,A)', 60); break;
     case 'lift': if (ob) ring(ob.x + ob.w / 2, ob.y + ob.h / 2, 'rgba(255,217,138,A)', 70); Snd.thud(); Snd.good(); break;
     case 'throw': float(ev.id, 'Thrown!', '#ffb7ac'); ring(R.cx(ev.to.c), R.cy(ev.to.f, ev.to.r), 'rgba(255,217,138,A)', 30); Snd.snap(); break;
@@ -305,14 +308,14 @@ function renderTable() {
 $('#table').addEventListener('click', e => {
   if (!e.target.closest('#btnFound') || !$('#modal').hidden || !V.journal.length) return;
   const html = '<div class="jlist">' + V.journal.map(c => '<div class="' + c.kind + '"><b>' + esc(c.title) + '</b>' + (c.text ? '<p>' + esc(c.text) + '</p>' : '') + '</div>').join('') + '</div>';
-  showCard({ kind: 'story', cls: 'rules', title: 'Found cards', sub: 'Clues, memories and what the house has shown you', html }, [{ label: 'Close', value: true }]);
+  showCard({ kind: 'story', cls: 'rules', title: 'Found cards', sub: 'Lore, memories and what the house has shown you', html }, [{ label: 'Close', value: true }]);
 });
 // A card comes off a deck, turns face up beside the board, and the board lights what it is about.
 function drawCard(o) {
   if (auto) return Promise.resolve();
   return new Promise(res => {
     const el = $('#draw'); V.target = o.target || null;
-    el.className = o.target && o.target.y < R.OY.G - 40 ? 'low' : 'high';
+    const t0 = o.target ? [].concat(o.target)[0] : null; el.className = t0 && t0.y < R.OY.G - 40 ? 'low' : 'high';
     el.innerHTML = '<div class="pcard in ' + o.who + '"><div class="pc-in"><div class="pc-back"><span>' + esc(o.deck) + '</span></div><div class="pc-front"><div class="pc-top"><i>' + o.num + '</i><span>' + esc(o.kind) + '</span></div><h3>' + esc(o.title) + '</h3><p>' + esc(o.text) + '</p>' + (o.foot ? '<div class="pc-foot">' + esc(o.foot) + '</div>' : '') + '</div></div></div>' +
       '<div class="dside"><div class="dcap">' + esc(o.cap) + '</div>' + (o.note ? '<div class="dnote">' + esc(o.note) + '</div>' : '') + '<button type="button" class="dbtn">Continue</button></div>';
     el.hidden = false; Snd.search();
@@ -327,16 +330,16 @@ async function dealScene() {
   if (auto) { V.hideObj = null; V.dealt = true; V.dealtN = 2; return; }
   await banner('The Deal', 750); if (me !== gid) return;
   for (const h of HW.heroList(S)) {
-    const ch = HW.CHAINS[h.chain], fo = HW.obj(S, ch.find);
+    const ch = HW.CHAINS[h.chain], pcs = HW.roomPieces(S, ch.room);
     V.dealtN++; hud(); addLog(h.name + ' draws from the Objective deck: ' + esc(ch.findTitle) + '.', 'good');
     await drawCard({ deck: 'Objective deck', kind: h.name + '’s objective', who: h.id, num: 'I', title: ch.findTitle, text: ch.findText, foot: 'His card III stays face down until cards I and II are done.',
-      cap: h.name + ' draws a card from the Objective deck.', note: 'Lit on the board: the ' + fo.name + ' in the ' + HW.roomAt(fo.f, fo.t[0][0], fo.t[0][1]) + '. The token on it is face down until someone searches it.', target: R.objBox(fo) });
+      cap: h.name + ' draws a card from the Objective deck.', note: 'Lit on the board: the ' + pcs.length + ' search tokens in ' + HW.theRoom(ch.room) + ' (' + pcs.map(o => o.name).join(', ') + '). One of them hides it. The others hide supplies, lore, or a cold hand.', target: pcs.map(o => R.objBox(o)) });
     if (me !== gid) return;
   }
   V.hideObj = null; V.dealt = true; V.shake = now() + 0.35; Snd.thud(); hud();
   const ob2 = R.objBox(ob); ring(ob2.x + ob2.w / 2, ob2.y + ob2.h / 2, 'rgba(255,217,138,A)', 70, 1);
   addLog('The Shared deck gives: lift the ' + esc(ob.name) + '. Its piece goes on the board.', 'good');
-  const blocked = HW.heroList(S).map(h => { const fo = HW.obj(S, HW.CHAINS[h.chain].find), ri = HW.routeInfo(S, h, HW.adjTilesOfObj(S, fo)); return ri ? 'For ' + h.name + ' it is in the way of the ' + fo.name + ': ' + ri.long + ' spaces round, or ' + ri.short + ' once it is lifted.' : ''; }).filter(Boolean).join(' ');
+  const blocked = HW.heroList(S).map(h => { const room = HW.CHAINS[h.chain].room, ri = HW.routeInfo(S, h, HW.roomGoal(S, { objs: HW.roomPieces(S, room) })); return ri ? 'For ' + h.name + ' it is in the way of ' + HW.theRoom(room) + ': ' + ri.long + ' spaces round, or ' + ri.short + ' once it is lifted.' : ''; }).filter(Boolean).join(' ');
   await drawCard({ deck: 'Shared deck', kind: 'Shared objective', who: 'both', num: 'II', title: 'Lift the ' + ob.name,
     text: 'Put the ' + ob.short + ' piece ' + (S.variant === 'A' ? 'across the Servants’ Passage' : 'in the archway between the Gallery and the Music Room') + '. Both heroes stand beside it and each spends 1 action to lift it clear.', foot: 'Counts for both of you, even if one has not finished card I.',
     cap: 'One card from the Shared deck goes between them, and its piece goes on the board.', note: blocked || 'Nobody’s first objective is behind it tonight, but both of you need it lifted before card III.', target: ob2 });
@@ -349,7 +352,7 @@ async function revealThird() {
     const ch = HW.CHAINS[h.chain], uo = HW.obj(S, ch.use);
     addLog(h.name + ' turns over his last card: ' + esc(ch.useTitle) + '.', 'good');
     await drawCard({ deck: 'Card III', kind: h.name + '’s objective', who: h.id, num: 'III', title: ch.useTitle, text: ch.useText, foot: 'Reward: ' + ch.reward,
-      cap: h.name + ' turns his last card face up.', note: 'Lit on the board: the ' + uo.name + ' in the ' + HW.roomAt(uo.f, uo.t[0][0], Math.max(1, uo.t[0][1])) + '.' + (ch.brain ? ' It is a thinking task: ' + ch.work + ' actions of work, or Wesley can Deduce it for 2 Insight.' : ''), target: R.objBox(uo) });
+      cap: h.name + ' turns his last card face up.', note: 'Lit on the board: the ' + uo.name + ' in the ' + HW.roomAt(uo.f, uo.t[0][0], Math.max(1, uo.t[0][1])) + '.' + (ch.brain ? ' It is a thinking task: ' + ch.work + ' actions of work there, or Wesley\'s Deduction finishes it from anywhere for ' + CFG.deduceCost + ' Insight.' : ''), target: R.objBox(uo) });
   }
 }
 
@@ -358,7 +361,7 @@ const human = id => !auto && !S.heroes[id].npc;
 function targetBox(h) {
   const st = HW.stepOf(S, h), ch = HW.CHAINS[h.chain];
   const ob = id => R.objBox(HW.obj(S, id));
-  const item = it => { const l = HW.locate(S, it); if (!l) return null; if (l.where === 'obj') return ob(l.id); if (l.where === 'ground') return { x: R.tx(l.pos.c) + 4, y: R.ty(l.pos.f, l.pos.r), w: 32, h: 30 }; return null; };
+  const item = it => { const l = HW.locate(S, it); if (!l) return null; if (l.where === 'room') return l.objs.map(o => R.objBox(o)); if (l.where === 'ground') return { x: R.tx(l.pos.c) + 4, y: R.ty(l.pos.f, l.pos.r), w: 32, h: 30 }; return null; };
   if (S.key.state === 'hatch') return ob('hatch');
   if (S.key.state !== 'hidden') { if (!HW.heroList(S).some(x => x.inv.includes('masterkey'))) return item('masterkey'); return { x: R.tx(9) + 2, y: R.ty('G', 8) - 20, w: 76, h: 50 }; }
   if (st === 'find') return item(ch.item);
@@ -395,23 +398,23 @@ function showPop(list, e) {
   p.hidden = false; p.style.left = Math.max(4, Math.min(st.width - 290, e.clientX - st.left - 20)) + 'px'; p.style.top = Math.max(4, Math.min(st.height - list.length * 40 - 10, e.clientY - st.top + 12)) + 'px';
   p.onclick = ev => { const b = ev.target.closest('button[data-p]'); if (b && !b.disabled) choose(list[+b.dataset.p]); };
 }
-const INFO = { doll: 'Weeping Doll: +1 Fright within 2 spaces', gramophone: 'Haunted Record Player: plays on a count of 3', hatch: 'Cellar Hatch', bust: 'Marble Bust', harp: 'Harp', armchairL: 'Reading Chair', armchairS: 'Armchair' };
+const INFO = { doll: 'Weeping Doll: +1 Fright when you come within 2 spaces, once a round', gramophone: 'Haunted Record Player: the blue hand takes anyone who comes within 2 spaces', hatch: 'Cellar Hatch', harp: 'Harp' };
 function onHover(p) {
   if (!S || demo || V.cine) { V.hover = null; return; }
   if (V.reach && V.reach.res) {
     const tl = R.tileAt(p.x, p.y), rt = reachTile(tl); V.cursor = rt || null;
-    V.hover = rt ? { x: R.cx(rt.c), y: R.cy(rt.f, rt.r), label: (rt.trap ? 'The Entity Trap is here!' : rt.exit ? 'Step outside' : rt.d + (rt.d === 1 ? ' space' : ' spaces')) + (V.star && HW.same(V.star, rt) ? ' · a good spot' : '') } : null;
+    V.hover = rt ? { x: R.cx(rt.c), y: R.cy(rt.f, rt.r), label: (rt.trap ? 'The Entity Trap is here!' : rt.hand ? 'In the blue hand\'s reach: lose a heart and be thrown' : rt.exit ? 'Step outside' : rt.d + (rt.d === 1 ? ' space' : ' spaces')) + (rt.doll && !rt.hand ? ' · past the Weeping Doll, +1 Fright' : '') + (V.star && HW.same(V.star, rt) ? ' · a good spot' : '') } : null;
     board.style.cursor = rt ? 'pointer' : 'default'; return;
   }
   const pk = R.pick(S, V, p.x, p.y); let label = '', box = pk && pk.box, act = false;
   for (const id of ['ghost', 'hollow']) { const q = P(id); if (Math.abs(p.x - q.x) < 13 && p.y > q.y - 66 && p.y < q.y + 8) { label = id === 'ghost' ? 'Lil\': drifts 1 toward the nearest hero, then rolls' : 'The Hollow: frightens whoever stands in his pale cone'; box = null; } }
-  if (!label) for (const tr of S.traps) if (Math.abs(p.x - R.cx(tr.c)) < 14 && Math.abs(p.y - R.cy(tr.f, tr.r)) < 9) label = tr.dormant > 0 ? 'Entity Trap: shut for now' : 'Entity Trap: creeps toward anyone within ' + CFG.trapNotice;
+  if (!label) for (const tr of S.traps) if (Math.abs(p.x - R.cx(tr.c)) < 14 && Math.abs(p.y - R.cy(tr.f, tr.r)) < 9) label = tr.dormant > 0 ? 'Entity Trap: sprung, shut for now' : 'Entity Trap: it never moves. Step in and you are held';
   if (!label && pk) {
     const list = optsFor(pk).filter(o => !o.disabled), dis = optsFor(pk).find(o => o.disabled);
     if (list.length === 1) { label = list[0].label + (list[0].cost ? ' · 1 action' : ''); act = true; }
     else if (list.length > 1) { label = list.length + ' actions here'; act = true; }
     else if (dis) label = dis.why;
-    else if (pk.kind === 'obj') { const o = HW.obj(S, pk.id); label = INFO[pk.id] || (o.search && S.searched[o.id] ? o.name + ' (searched)' : V.input && o.search ? o.name + ': stand beside it to search' : o.name); }
+    else if (pk.kind === 'obj') { const o = HW.obj(S, pk.id); label = (pk.id === 'gramophone' && S.record.calmed ? 'The record player, calm, playing Lil\'s lullaby' : INFO[pk.id]) || (o.search && S.searched[o.id] ? o.name + ' (searched)' : V.input && o.search ? o.name + ': stand beside it to search' : o.name); }
     else if (pk.kind === 'mini') { const h = S.heroes[pk.id]; label = h.name; box = null; }
     else if (pk.kind === 'door') label = S.door.open ? 'The front door, open' : 'The front door, locked';
     else if (pk.kind === 'tile' && HW.HIDES[HW.key(pk)]) label = 'Hiding place: ' + HW.HIDES[HW.key(pk)];
@@ -500,7 +503,7 @@ async function handle(ev) {
     case 'clock': hud(); Snd.tick(); await sleep(200); break;
     case 'step': Snd.good(); break;
     case 'phase': await revealThird(); V.active = null; V.status = 'The haunt: Lil\' and the Hollow take their turn.'; hud(); await banner('The Haunt'); break;
-    case 'search': { const b = R.objBox(HW.obj(S, ev.obj)), f = ev.found || {}; ring(b.x + b.w / 2, b.y + b.h / 2, 'rgba(255,217,138,A)', 30); Snd.search(); V.fx.push({ x: b.x + b.w / 2, y: b.y + 4, text: 'Token: ' + (f.k === 'clue' ? 'a Clue card' : f.item ? HW.ITEMS[f.item].name : f.k === 'scare' ? 'a cold hand!' : 'nothing'), col: '#ffd98a', t0: now(), dur: 1.9 }); await sleep(650); break; }
+    case 'search': { const b = R.objBox(HW.obj(S, ev.obj)), f = ev.found || {}; ring(b.x + b.w / 2, b.y + b.h / 2, 'rgba(255,217,138,A)', 30); Snd.search(); V.fx.push({ x: b.x + b.w / 2, y: b.y + 4, text: 'Token: ' + (f.k === 'clue' ? 'a Lore card' : f.item ? HW.ITEMS[f.item].name : f.k === 'scare' ? 'a cold hand!' : 'nothing'), col: '#ffd98a', t0: now(), dur: 1.9 }); await sleep(650); break; }
     case 'turnface': await sleep(250); break;
     case 'end': await ending(ev.result); break;
   }
@@ -529,23 +532,23 @@ async function intro() {
   V.hide = { brock: true, wesley: true }; V.doorOpen = true; V.dim = 0.22; V.status = ''; $('#skip').hidden = false;
   cap('Hollowwood Manor has stood shut for sixty years. People say two daughters lived here once. People only ever name one of them.'); await beat(7500); cap('');
   if (live()) { V.hide.brock = false; stand('brock', 9, 8); await beat(400); await walk('brock', 9, 8, 7); }
-  await line('brock', 'Ten minutes. In, look around, out. Then nobody gets to say I\'m all talk.');
+  await line('brock', 'Ten minutes inside. That\'s the dare, four-eyes. Or you can go home and cry about it.');
   if (live()) { V.hide.wesley = false; stand('wesley', 10, 8); }
-  await line('wesley', 'Nobody says that. They say you\'re loud.');
-  await line('brock', 'Loud, and inside a haunted house. Where are you standing, Wes?');
+  await line('wesley', 'I\'m not here for your stupid dare.');
+  await line('brock', 'Sure. You just happened to follow me to a haunted house.');
   await walk('wesley', 10, 8, 7);
-  await line('wesley', 'Inside. For the library. Sixty years sealed, Brock. Not for you.');
+  await line('wesley', 'I came for the library. Sixty years sealed. You came so people would watch you do it.');
   if (live()) {
     V.doorOpen = false; V.shake = now() + 0.45; Snd.thud(); V.dim = 0.45;
     cap('Behind them the front door closes. It is not a slam. It is one careful click, like a key turned from the other side.');
     await tween(1100, k => { V.dim = 0.45 - 0.27 * k; }); await beat(5600); cap('');
   }
   await line('brock', 'Wind.');
-  await line('wesley', 'Wind doesn\'t turn a key.');
+  await line('wesley', 'Wind doesn\'t turn a key, you oaf.');
   if (live()) { const g = R.posOf(S, V, 'ghost'); ring(g.x, g.y - 20, 'rgba(200,228,255,A)', 90, 1.5); ring(g.x, g.y - 20, 'rgba(200,228,255,A)', 50, 1); Snd.ghost(); }
   await line('lil', '“Someone\'s come to play.”');
-  await line('brock', 'Tell me you didn\'t hear that.');
-  await line('wesley', 'I didn\'t hear that. Neither did you. Let\'s find a key.');
+  await line('brock', 'That was you. Tell me that was you.');
+  await line('wesley', 'It wasn\'t me. Find a key, and stay out of my way.');
   if (live()) { cap('Finish what the house sets you. Find the Master Key. Get both of them out before midnight.'); await beat(6500); }
   if (V.cine === C) { V.cine = null; V.hide = null; V.doorOpen = false; V.dim = 0; delete V.anim.brock; delete V.anim.wesley; V.bubbles = []; cap(''); $('#skip').hidden = true; }
   if (me !== gid) return;
@@ -559,7 +562,7 @@ async function ending(res) {
   else if (res.result === 'abandoned') { const x = S.heroes[res.who], y = HW.partner(S, x); title = 'One Set of Footsteps'; text = E.abandoned.replace(/\{X\}/g, x.name).replace(/\{Y\}/g, y.name); }
   else { title = 'The Night Ends'; text = ''; }
   const stat = (v, l) => '<div><b>' + esc(v) + '</b>' + esc(l) + '</div>';
-  const html = (res.result === 'escaped' ? '<p><i>' + esc(E.coda) + '</i></p>' : '') + '<div class="stats">' + stat(HW.fmtTime(Math.min(S.time, CFG.midnight)), 'on the clock') + stat(['At odds', 'Allies', 'Friends'][t], 'Brock and Wesley') + stat(Object.keys(S.clues).length + ' of 6', 'clues found') + stat(Math.min(S.memories, 6) + ' of 6', 'of Lil\'s memories') + '</div>';
+  const html = (res.result === 'escaped' ? '<p><i>' + esc(E.coda) + '</i></p>' : '') + '<div class="stats">' + stat(HW.fmtTime(Math.min(S.time, CFG.midnight)), 'on the clock') + stat(['At odds', 'A truce', 'Friends'][t], 'Brock and Wesley') + stat(Object.keys(S.clues).length + ' of ' + S.loreTotal, 'lore cards found') + stat(Math.min(S.memories, 6) + ' of 6', 'of Lil\'s memories') + '</div>';
   auto = false;
   await showCard({ kind: 'end', cls: res.result === 'escaped' ? '' : 'memory', title, sub: res.result === 'escaped' ? 'Chapter I complete' : 'The night is lost', text, html, effect: res.result === 'escaped' ? 'To be continued below the house.' : 'The house resets its board. Try another night.' }, [{ label: 'Play again', value: true }]);
   startScreen();
@@ -643,11 +646,13 @@ function startScreen() {
   $('#startRules').onclick = rules;
 }
 function rules() {
-  const html = '<h4>The night</h4><p>Each round both heroes take a turn, then the haunt moves. A round is 10 minutes. At midnight the cellar opens and the night is lost. It is also lost if both heroes are collapsed at once.</p>' +
-    '<h4>Your turn</h4><ul><li>You have 2 actions. Click things on the board, use the buttons, or press the key shown on each button.</li><li><b>The helper card</b> beside your hero lists everything you can do and marks one thing worth trying. Turn it off with the Helper button if you would rather find your own way.</li><li><b>Roll to move</b>: 1–2 moves up to 4, 3–4 up to 5, 5–6 up to 6. Click a lit space or drag the miniature. Stairs link the floors.</li><li><b>Search</b> furniture from a space beside it. Each piece can be searched once. Some hide clues, some hide supplies.</li><li><b>Help your partner</b> from beside him: revive, free from a trap, snap out of possession, steady his nerves, hand over an item.</li><li><b>Hide</b> on a draped space: nothing can touch or see you until your next turn.</li></ul>' +
-    '<h4>Cards</h4><p>At the start each hero draws an objective from the Objective deck, and one card from the Shared deck puts the blocked-route piece on the board. Every piece of furniture you can search carries a face-down search token, turned over when you search it. Each hero has three cards, done in order: find something, lift the blocked route together, then use what you found. The shared lift needs both heroes beside it, one action each, and it counts for both even if one of you has not finished card I. When both sets are done, the Master Key appears. Unlock the front door from the mat and walk both heroes out.</p>' +
-    '<h4>The haunt</h4><ul><li><b>Lil\'</b> drifts 1 space toward the nearest hero, then rolls. She passes through walls. Ending within 2 spaces of her adds 1 Fright; ending beside her costs a heart. On a 6 she possesses the nearest hero on her floor.</li><li><b>Possession</b>: the possessed hero acts last, and Lil\' spends his first action on sabotage: dropping his end of a lift, throwing an item, or turning on his partner. Snap him out of it first and nothing happens. Either way she shows you a memory, worth 1 Insight.</li><li><b>The Hollow</b> turns and steps by his die. Anyone standing in the pale cone in front of him when the haunt ends gains 1 Fright. Forced Gaze gives 2 to the nearest hero he can see. Whenever a hero loses a heart, he walks 2 spaces toward them.</li><li><b>Fright</b> at 5: lose an action next turn, then reset to 2.</li><li><b>Entity Traps</b> creep 1 space toward anyone within 5. <b>The record player</b> counts 3, 2, 1, then throws anyone within 2 spaces and takes a heart. <b>The Weeping Doll</b> adds 1 Fright within 2 spaces.</li></ul>' +
-    '<h4>Brock and Wesley</h4><ul><li><b>Brock, Protection</b>: when Wesley would lose a heart, Brock may appear beside him and take it. It costs 1 action, from this turn or his next. Once a round.</li><li><b>Wesley, Insight</b>: spend 1 to reroll any die, including the haunt\'s. Spend 2 to Deduce a thinking task instantly. Clues and Lil\'s memories give Insight.</li><li><b>Bond</b> grows when they help each other and finish cards. At 3, ending a turn side by side removes 1 Fright from each. At 6, Protection is free and help reaches 2 spaces.</li></ul>';
+  const html = '<h4>The night</h4><p>Each round both heroes take a turn, then the haunt moves. A round is 10 minutes, and the night starts at half past eight. At midnight the cellar opens and the night is lost. It is also lost if both heroes are collapsed at once.</p>' +
+    '<h4>Your turn</h4><ul><li>You have 2 actions. Click things on the board, use the buttons, or press the key shown on each button.</li><li><b>The helper card</b> beside your hero lists everything you can do and marks one thing worth trying. Turn it off with the Helper button if you would rather find your own way.</li><li><b>Roll to move</b>: 1–2 moves up to 4, 3–4 up to 5, 5–6 up to 6. Click a lit space or drag the miniature. Stairs link the floors.</li><li><b>Search</b> furniture from a space beside it. Every piece carries one face-down search token, turned over when you search it.</li><li><b>Help your partner</b> from beside him: revive, free from a trap, snap out of possession, steady his nerves, hand over an item.</li><li><b>Hide</b> on a draped space: nothing can touch or see you until your next turn.</li></ul>' +
+    '<h4>Cards</h4><p>At the start each hero draws an objective from the Objective deck, and one card from the Shared deck puts the blocked-route piece on the board. Each hero has three cards, done in order. <b>Card I names a room</b>: what you need is under one of the search tokens there, so you hunt for it. Card II is the shared lift: both heroes beside the piece, one action each, and it counts for both even if one of you has not finished card I. Card III is turned face up then, and tells you where to use what you found. When both sets are done, the Master Key appears. Unlock the front door from the mat and walk both heroes out.</p>' +
+    '<h4>Search tokens</h4><ul><li>Most hide something useful. <b>Smelling Salts</b>: lose 2 Fright. <b>Bandage</b>: 1 heart back, for you or your partner beside you. <b>Lucky Sixpence</b>: discard it to roll one die again, your own or the haunt\'s. <b>Pouch of Salt</b>: with Lil\' within 3 spaces, scatter it and she is held still through the next haunt.</li><li>A few hide <b>lore</b>: a piece of the sisters\' story, and 1 Insight for Wesley.</li><li>Two hide a cold hand: 1 Fright.</li></ul>' +
+    '<h4>The haunt</h4><ul><li><b>Lil\'</b> drifts 1 space toward the nearest hero, then rolls. She passes through walls. Ending within 2 spaces of her adds 1 Fright; ending beside her costs a heart. On a 6 she possesses the nearest hero on her floor.</li><li><b>Possession</b>: the possessed hero acts last, and Lil\' spends his first action on sabotage: dropping his end of a lift, walking him into a trap, throwing an item, or turning on his partner. Snap him out of it first and nothing happens. Either way she shows you a memory, worth 1 Insight.</li><li><b>The Hollow</b> turns and steps by his die. Anyone standing in the pale cone in front of him when the haunt ends gains 1 Fright. Forced Gaze gives 2 to the nearest hero he can see. Whenever a hero loses a heart, he walks 2 spaces toward them.</li><li><b>Fright</b> at 5: lose an action next turn, then reset to 2.</li></ul>' +
+    '<h4>What never moves</h4><ul><li><b>Entity Traps</b>: five are set on the board. Step onto one and you are held until you roll free (Brock 3+, Wesley 4+) or your partner frees you. You cannot walk through one.</li><li><b>The Haunted Record Player</b>: come within 2 spaces, the blue-tinted floor, and the hand takes a heart. Then roll the die: you are thrown to the chalk mark with that number. Mark 5 has a trap on it. Whoever carries Lil\'s Record is safe.</li><li><b>The Weeping Doll</b>: the first time each round you come within 2 spaces of her, the violet-tinted floor, gain 1 Fright.</li></ul>' +
+    '<h4>Brock and Wesley</h4><ul><li><b>Brock, Protection</b>: when Wesley would lose a heart, Brock may appear beside him and take it. It costs 1 action, from this turn or his next. Once a round.</li><li><b>Wesley, Deduction</b>: spend 2 Insight to finish a thinking objective on the spot, from anywhere in the house, once the thing it needs is in his hands (or in Brock\'s, beside him). He starts with 2. Lore and Lil\'s memories give more.</li><li><b>Bond</b>: they start at odds, and it grows only when they help each other and finish cards. At 4 they call a truce: ending a turn side by side removes 1 Fright from each. At 7 they are friends: Protection is free and help reaches 2 spaces.</li></ul>';
   showCard({ kind: 'story', cls: 'rules', title: 'How to Play', sub: 'Rules of the house', html }, [{ label: 'Close', value: true }]);
 }
 $('#btnRules').onclick = rules;

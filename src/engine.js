@@ -10,17 +10,17 @@ const CFG = {
   speed: { brock: 5, wesley: 5 },
   hearts: { brock: 4, wesley: 3 },
   frightCap: 5, frightReset: 2,
-  startTime: 21 * 60, minutesPerRound: 10, midnight: 24 * 60,
+  startTime: 20 * 60 + 30, minutesPerRound: 10, midnight: 24 * 60,
   ghostMove: 3, ghostMoveLate: 4, ghostLateAt: 22 * 60, ghostDrift: 1,
   hollowMove: 1, hollowMoveLate: 2, hollowLateAt: 23 * 60,
   gazeRange: 5, gazeFright: 1, forcedGazeFright: 2, senseSteps: 2,
   chillDamage: 1, dreadRange: 2, dreadFright: 1,
   dollRange: 2, dollFright: 1,
-  recordTimer: 3, recordRange: 2, recordDamage: 1,
-  trapNotice: 5, trapDormant: 2, trapBreak: { brock: 3, wesley: 4 },
-  insightStart: 1, insightCap: 4, rerollCost: 1, deduceCost: 2,
-  bondMax: 6, bondBackToBack: 3, bondFriends: 6,
-  calmAmount: 2, saltsAmount: 2, bandageAmount: 1,
+  recordRange: 2, recordDamage: 1,
+  trapDormant: 2, trapBreak: { brock: 3, wesley: 4 }, trapLure: 3,
+  insightStart: 2, insightCap: 4, deduceCost: 2,
+  bondMax: 7, bondBackToBack: 4, bondFriends: 7,
+  calmAmount: 2, saltsAmount: 2, bandageAmount: 1, saltRange: 3,
   entrancedRounds: 2, clockRewind: 30,
   shoveFright: 2,
 };
@@ -87,20 +87,20 @@ function buildObjects(variant) {
     { id: 'shelfW', f: 'G', t: [[1, 4], [2, 4]], kind: 'shelf', name: 'West Bookshelves', search: true },
     { id: 'shelfE', f: 'G', t: [[4, 4], [5, 4]], kind: 'shelf', name: 'East Bookshelves', search: true },
     { id: 'strongbox', f: 'G', t: [[1, 7]], kind: 'strongbox', name: 'Iron Strongbox' },
-    { id: 'armchairL', f: 'G', t: [[5, 7]], kind: 'armchair', name: 'Reading Chair' },
-    { id: 'clock', f: 'G', t: [[7, 4]], kind: 'gclock', name: 'Grandfather Clock' },
+    { id: 'armchairL', f: 'G', t: [[5, 7]], kind: 'armchair', name: 'Reading Chair', search: true },
+    { id: 'clock', f: 'G', t: [[7, 4]], kind: 'gclock', name: 'Grandfather Clock', search: true },
     { id: 'console', f: 'G', t: [[12, 6]], kind: 'console', name: 'Hall Console', search: true },
     { id: 'desk', f: 'G', t: [[16, 4], [17, 4]], kind: 'desk', name: 'Writing Desk', search: true },
     { id: 'chest', f: 'G', t: [[14, 7]], kind: 'chest', name: 'Study Chest', search: true },
-    { id: 'armchairS', f: 'G', t: [[17, 7]], kind: 'armchair', name: 'Armchair' },
+    { id: 'armchairS', f: 'G', t: [[17, 7]], kind: 'armchair', name: 'Armchair', search: true },
     { id: 'bed', f: 'U', t: [[1, 1], [2, 1]], kind: 'bed', name: 'Bed', search: true },
     { id: 'vanity', f: 'U', t: [[4, 1]], kind: 'vanity', name: 'Vanity', search: true },
     { id: 'toychest', f: 'U', t: [[1, 6]], kind: 'chest', name: 'Toy Chest', search: true },
-    { id: 'doll', f: 'U', t: [[3, 4]], kind: 'doll', name: 'Weeping Doll' },
+    { id: 'doll', f: 'U', t: [[2, 4]], kind: 'doll', name: 'Weeping Doll' },
     { id: 'portrait', f: 'U', t: [[9, 0], [10, 0]], kind: 'portrait', name: 'Family Portrait', wall: true },
     { id: 'case', f: 'U', t: [[8, 4]], kind: 'case', name: 'Display Case', search: true },
-    { id: 'bust', f: 'U', t: [[11, 2]], kind: 'bust', name: 'Marble Bust' },
-    { id: 'gramophone', f: 'U', t: [[16, 5]], kind: 'gramophone', name: 'Haunted Record Player' },
+    { id: 'bust', f: 'U', t: [[11, 2]], kind: 'bust', name: 'Marble Bust', search: true },
+    { id: 'gramophone', f: 'U', t: [[17, 4]], kind: 'gramophone', name: 'Haunted Record Player' },
     { id: 'piano', f: 'U', t: [[14, 6], [15, 6]], kind: 'piano', name: 'Piano', search: true },
     { id: 'musiccab', f: 'U', t: [[14, 1]], kind: 'musiccab', name: 'Music Cabinet', search: true },
     { id: 'harp', f: 'U', t: [[17, 7]], kind: 'harp', name: 'Harp' },
@@ -119,33 +119,35 @@ const ITEMS = {
   fragment: { name: 'Portrait Fragment', chain: 'portrait' },
   record: { name: 'Lil\'s Record', chain: 'lullaby' },
   windkey: { name: 'Winding Key', chain: 'clock' },
-  salts: { name: 'Smelling Salts', use: true },
-  bandage: { name: 'Bandage', use: true },
+  salts: { name: 'Smelling Salts', a: 'Smelling Salts', use: true },
+  bandage: { name: 'Bandage', a: 'a Bandage', use: true },
+  sixpence: { name: 'Lucky Sixpence', a: 'a Lucky Sixpence', use: true },
+  salt: { name: 'Pouch of Salt', a: 'a Pouch of Salt', use: true },
   masterkey: { name: 'Master Key' },
 };
 
 const CHAINS = {
   cipher: {
-    name: 'The Cipher', item: 'cipher', find: 'desk', use: 'strongbox', work: 2, brain: true,
-    findTitle: 'The Cipher Page', findText: 'Search the Writing Desk in the Study.',
+    name: 'The Cipher', item: 'cipher', room: 'Study', use: 'strongbox', work: 2, brain: true,
+    findTitle: 'The Cipher Page', findText: 'Search the Study. It lies under one of the search tokens there.',
     useTitle: 'Decode the Strongbox', useText: 'Work the cipher on the Iron Strongbox in the Library.', useVerb: 'Decode the strongbox',
     reward: 'Gain 2 Insight.',
   },
   portrait: {
-    name: 'The Portrait', item: 'fragment', find: 'shelfW', use: 'portrait', work: 1,
-    findTitle: 'The Torn Fragment', findText: 'Search the West Bookshelves in the Library.',
+    name: 'The Portrait', item: 'fragment', room: 'Library', use: 'portrait', work: 1,
+    findTitle: 'The Torn Fragment', findText: 'Search the Library. It lies under one of the search tokens there.',
     useTitle: 'Restore the Portrait', useText: 'Fit the fragment into the Family Portrait in the Gallery.', useVerb: 'Restore the portrait',
     reward: 'Lil\' is entranced for 2 rounds.',
   },
   lullaby: {
-    name: 'The Lullaby', item: 'record', find: 'toychest', use: 'gramophone', work: 1,
-    findTitle: 'Lil\'s Record', findText: 'Search the Toy Chest in Lil\'s Bedroom.',
-    useTitle: 'Play the Lullaby', useText: 'Put Lil\'s record on the Haunted Record Player in the Music Room.', useVerb: 'Play Lil\'s record',
+    name: 'The Lullaby', item: 'record', room: 'Lil\'s Bedroom', use: 'gramophone', work: 1,
+    findTitle: 'Lil\'s Record', findText: 'Search Lil\'s Bedroom. It lies under one of the search tokens there.',
+    useTitle: 'Play the Lullaby', useText: 'Put Lil\'s record on the Haunted Record Player in the Music Room. The blue hand will not reach for whoever carries it.', useVerb: 'Play Lil\'s record',
     reward: 'The record player is calmed for good.',
   },
   clock: {
-    name: 'The Hour', item: 'windkey', find: 'piano', use: 'clock', work: 2, brain: true,
-    findTitle: 'The Winding Key', findText: 'Search the Piano in the Music Room.',
+    name: 'The Hour', item: 'windkey', room: 'Music Room', use: 'clock', work: 2, brain: true,
+    findTitle: 'The Winding Key', findText: 'Search the Music Room. It lies under one of the search tokens there.',
     useTitle: 'Set the Hour', useText: 'Wind the Grandfather Clock in the Entrance Hall back to the hour it stopped.', useVerb: 'Wind the clock',
     reward: 'The night turns back 30 minutes.',
   },
@@ -198,23 +200,24 @@ const STORY = {
     { kind: 'story', title: 'Hollowwood Manor', sub: 'Chapter I · The Sisters',
       text: 'The last Hollowoods died in their beds, old and quiet, and the house has stood shut ever since. People say two daughters lived here once. People only ever name one of them.' },
     { kind: 'scene', title: 'The Dare',
-      lines: [['brock', 'Ten minutes inside. That\'s the dare. Then I never call you a coward again.'],
-        ['wesley', 'I\'m not here for your dare. The Hollowood library has been sealed for sixty years.'],
+      lines: [['brock', 'Ten minutes inside. That\'s the dare, four-eyes. Or go home and cry about it.'],
+        ['wesley', 'I\'m not here for your stupid dare. The Hollowood library has been sealed for sixty years.'],
         ['brock', 'So it\'s dust. You came for dust.'],
-        ['wesley', 'I came for— you know what, never mind. After you.']] },
+        ['wesley', 'And you came so people would watch you do it. After you, hero.']] },
     { kind: 'story', title: 'The Door',
       text: 'The front door closes behind them. It is not a slam. It is a careful, deliberate click, like someone turning a key from the other side.',
-      lines: [['brock', 'Wind.'], ['wesley', 'That was a lock, Brock.']],
+      lines: [['brock', 'Wind.'], ['wesley', 'Wind doesn\'t turn a key, you oaf.']],
       effect: 'Finish what the house sets you, find the Master Key, and get both of them out the front door before midnight.' },
   ],
   truce: { kind: 'scene', title: 'A Truce, More or Less',
-    lines: [['wesley', 'You didn\'t have to do that.'], ['brock', 'Yeah, well. Don\'t make it weird.'],
-      ['wesley', 'I\'m not making it weird, you\'re the one who— fine. Thank you.'], ['brock', 'You\'re welcome, Wes.']],
-    effect: 'Bond 3 · Back to Back: when either ends a turn beside the other, both lose 1 Fright.' },
+    lines: [['wesley', 'You didn\'t have to do that.'], ['brock', 'I know I didn\'t. Don\'t make it weird.'],
+      ['wesley', 'I\'m not making it weird, you\'re the one who— fine. Truce. Until we\'re out.'], ['brock', 'Until we\'re out. Then I go back to hating your guts, Wes.'],
+      ['wesley', 'It\'s Wesley.'], ['brock', 'Sure it is, Wes.']],
+    effect: 'Bond 4 · Back to Back: when either ends a turn beside the other, both lose 1 Fright.' },
   friends: { kind: 'scene', title: 'Friends',
     lines: [['brock', 'If we get out, tell everyone I was terrified.'], ['wesley', 'You were terrified.'],
       ['brock', 'I know. It sounds better coming from you.']],
-    effect: 'Bond 6 · Friends: Brock\'s Protection costs no action, and they can help each other from 2 spaces away.' },
+    effect: 'Bond 7 · Friends: Brock\'s Protection costs no action, and they can help each other from 2 spaces away.' },
   uses: {
     portrait: { kind: 'story', title: 'The Portrait, Restored',
       text: 'The torn piece fits. Four Hollowoods: Father, Mother, and between them a small girl in white, every brushstroke lavished on her. At the frame\'s edge, half in shadow, stands the elder daughter. Someone painted her last, and quickly.',
@@ -245,8 +248,8 @@ const STORY = {
   chime23: { kind: 'story', title: 'Eleven O\'Clock', text: 'The chimes come from the wrong rooms. The Hollow straightens, as though someone had said his name.', effect: 'From now on the Hollow moves 2 spaces. One hour remains.' },
   endings: {
     escaped: [
-      'They leave by the same door and walk home on opposite sides of the road. But on Monday, when someone laughs at Wesley, Brock doesn\'t join in.',
-      'On the gravel, Brock holds out a hand. Wesley, after a moment, takes it. Neither of them says anything clever.',
+      'They leave by the same door and walk home on opposite sides of the road, not speaking. But on Monday, when someone laughs at Wesley, Brock doesn\'t join in.',
+      'On the gravel, Brock holds out a hand. Wesley looks at it for a long moment, as if it might be a trick, and takes it. Neither of them says anything clever.',
       'They sit on the manor steps until the sun comes up, because neither wants to be the first to go home. “Same time next week?” says Brock. Wesley laughs so hard his glasses fall off.',
     ],
     coda: 'In an upstairs window, a girl in white watches them go. Beneath the house, something that has forgotten its own name remembers hers.',
@@ -256,36 +259,40 @@ const STORY = {
   },
 };
 
-// LINES[key][who] = [at odds, allies, friends]
+// LINES[key][who] = [at odds, a truce, friends]. At odds they are properly unkind; "Wes" only arrives with the truce.
 const LINES = {
-  dust: { brock: ['Dust. Great. Love dust.', 'Nothing. Moving on.', 'Nothing here, Wes.'], wesley: ['Nothing. Moths and regret.', 'Empty. Pity.', 'Nothing in here, Brock.'] },
-  loot: { brock: ['Finders keepers.', 'This\'ll come in handy.', 'Got something for us.'], wesley: ['Oh. This could be useful.', 'This could be useful.', 'Brock, look what I found.'] },
-  found: { brock: ['Got it. Try to keep up, Wes.', 'Got it! Wes, I got it!', 'Got it. Your turn, professor.'], wesley: ['Found it. No thanks to anyone.', 'Found it! I actually found it!', 'Found it! Brock, look!'] },
-  foundOther: { brock: ['Hey. This is Wes\'s thing.', 'This is the piece Wes needs.', 'Wes! Found yours!'], wesley: ['This is what Brock\'s after.', 'This is the piece Brock needs.', 'Brock! I\'ve got yours!'] },
-  hurt: { brock: ['I\'m fine! Don\'t look at me.', 'Ow. Okay. That one counted.', 'Still standing, Wes.'], wesley: ['I\'m all right. I said I\'m all right!', 'That really hurt.', 'I\'m okay! Mostly!'] },
+  dust: { brock: ['Nothing. Like the inside of your head, four-eyes.', 'Nothing. Moving on.', 'Nothing here, Wes.'], wesley: ['Empty. Rather like you, Brock.', 'Empty. Pity.', 'Nothing in here, Brock.'] },
+  loot: { brock: ['Mine. Finders keepers, bookworm.', 'This\'ll come in handy.', 'Got something for us.'], wesley: ['I found it, so I\'m keeping it.', 'This could be useful. To me.', 'Brock, look what I found.'] },
+  found: { brock: ['Got it. First. As usual.', 'Got it. Try to keep up, Wes.', 'Got it! Wes, I got it!'], wesley: ['Found it. No thanks to you.', 'Found it. You\'re welcome.', 'Found it! Brock, look!'] },
+  foundOther: { brock: ['Oh, look. Your homework, four-eyes.', 'This is the thing you\'re after, Wes.', 'Wes! Found yours!'], wesley: ['This is yours. Try not to break it.', 'This is the piece you need.', 'Brock! I\'ve got yours!'] },
+  hurt: { brock: ['I\'m fine! Quit staring!', 'Ow. Okay. That one counted.', 'Still standing, Wes.'], wesley: ['I\'m all right. I said I\'m all right!', 'That really hurt. Don\'t say a word.', 'I\'m okay! Mostly!'] },
   fright: { brock: ['I\'m not scared. You\'re scared.', 'Okay. That\'s a little unsettling.', 'Yeah, I\'m scared. Keep moving.'], wesley: ['Don\'t look at it, don\'t look at it.', 'Breathe. Just breathe.', 'Brock? Stay close?'] },
-  panic: { brock: ['Hands won\'t stop shaking. Give me a second.', 'Hands won\'t stop shaking. Give me a second.', 'Wes, I need a second.'], wesley: ['I can\'t. I need a moment.', 'I can\'t. I need a moment.', 'Brock, I need a moment.'] },
-  protect: { brock: ['Move, four-eyes!', 'Not him!', 'Get behind me, Wes!'] },
-  protected: { wesley: ['I didn\'t ask you to do that!', 'You— why would you do that?', 'Brock! Thank you.'] },
-  snap: { brock: ['Hey! HEY! Wesley! Knock it off!', 'Wes. It\'s me. Come back.', 'Come on, Wes. I\'ve got you.'], wesley: ['Brock, stop, this isn\'t funny. Oh. Oh no.', 'Brock! Look at me!', 'Brock. You\'re you. Come back.'] },
-  snapped: { brock: ['What did I do? Did I do something?', 'What did I do?', 'Thanks, Wes. I\'m back.'], wesley: ['I saw… she showed me… I\'m here.', 'She showed me something. I\'m here.', 'I\'m here. I\'m here. Thank you.'] },
-  witness: { brock: ['Wes? Quit messing around.', 'Wes? That\'s not Wes.', 'Wes, hang on. I\'m coming.'], wesley: ['Brock? Very funny. Brock?', 'Brock? Your eyes…', 'Brock, hold on. I\'m coming.'] },
-  dropped: { brock: ['What the hell, Wes?!', 'Not your fault. Hers.', 'Not your fault, Wes.'], wesley: ['You dropped it ON me! On purpose!', 'That wasn\'t you. I know that wasn\'t you.', 'That wasn\'t you. I know.'] },
-  threw: { brock: ['Why is my hand empty?', 'Why is my hand empty?', 'Wes, I think I threw it.'], wesley: ['I threw it? Why would I—', 'I threw it? Why would I—', 'Brock, I\'m sorry, I threw it.'] },
-  shoved: { brock: ['Hands off, Wes!', 'That\'s not you pushing. I know.', 'It\'s all right, Wes.'], wesley: ['Don\'t touch me!', 'That isn\'t you. It isn\'t.', 'It\'s all right, Brock.'] },
-  revive: { brock: ['Up. Get up. I\'m not carrying you.', 'Hey! Eyes open, Wes.', 'I\'ve got you. Up we get.'], wesley: ['Don\'t you dare. Get up!', 'Brock! Please!', 'Not without you. Up!'] },
-  free: { brock: ['Hold still. Don\'t look at the eyes.', 'Hold still. Nearly got it.', 'Got you. Easy.'], wesley: ['There\'s a release pin. There!', 'There\'s a release pin. There!', 'Got it. You\'re out.'] },
-  calm: { brock: ['Breathe. You\'re embarrassing us both.', 'Easy. In and out.', 'I\'m right here. Breathe.'], wesley: ['You\'re hyperventilating. Stop it.', 'Count backward with me.', 'It\'s all right. I\'m here too.'] },
-  liftTake: { brock: ['I\'ve got this end.', 'I\'ve got this end.', 'Got my end, Wes.'], wesley: ['Ready when you are.', 'Ready when you are.', 'Ready, Brock.'] },
-  liftDone: { brock: ['See? Easy. You barely helped.', 'Ha! Good lift, Wes.', 'That\'s us. Good lift.'], wesley: ['I did most of that.', 'We did it!', 'We did it!'] },
-  give: { brock: ['Here. Don\'t lose it.', 'Here. Yours.', 'Here you go, Wes.'], wesley: ['Here. Take it.', 'Here. Take it.', 'Here, Brock.'] },
+  panic: { brock: ['My hands are fine. Shut up. They\'re fine.', 'Hands won\'t stop shaking. Give me a second.', 'Wes, I need a second.'], wesley: ['I can\'t. And don\'t you dare laugh.', 'I can\'t. I need a moment.', 'Brock, I need a moment.'] },
+  protect: { brock: ['Move, four-eyes!', 'Out of the way, Wes!', 'Get behind me, Wes!'] },
+  protected: { wesley: ['I didn\'t ask you to! I don\'t want to owe you!', 'Why would you— I had it handled!', 'Brock! Thank you.'] },
+  gloat: { brock: ['That\'s one you owe me, four-eyes. I\'m counting.', 'You\'re welcome. Don\'t make it a habit.', 'Don\'t mention it. Really. Don\'t.'] },
+  snap: { brock: ['Hey! HEY! Wake up, you little creep!', 'Wes. It\'s me. Come back.', 'Come on, Wes. I\'ve got you.'], wesley: ['Stop it, Brock, it isn\'t funny! Oh. Oh no.', 'Brock! Look at me!', 'Brock. You\'re you. Come back.'] },
+  snapped: { brock: ['What? Why are you looking at me like that?', 'What did I do?', 'Thanks, Wes. I\'m back.'], wesley: ['I saw… never mind. You wouldn\'t understand.', 'She showed me something. I\'m here.', 'I\'m here. I\'m here. Thank you.'] },
+  witness: { brock: ['Quit messing around, four-eyes. It\'s not funny.', 'Wes? That\'s not Wes.', 'Wes, hang on. I\'m coming.'], wesley: ['Very funny, Brock. Hilarious. Brock?', 'Brock? Your eyes…', 'Brock, hold on. I\'m coming.'] },
+  dropped: { brock: ['You did that on purpose, you little weasel!', 'That wasn\'t you. Fine. I know.', 'Not your fault, Wes.'], wesley: ['You dropped it ON me! You absolute oaf!', 'That wasn\'t you. I think. Was it?', 'That wasn\'t you. I know.'] },
+  threw: { brock: ['I didn\'t throw it. Shut up. I didn\'t.', 'Why is my hand empty?', 'Wes, I think I threw it.'], wesley: ['I threw it? I didn\'t— stop looking at me!', 'I threw it? Why would I—', 'Brock, I\'m sorry, I threw it.'] },
+  shoved: { brock: ['Touch me again and I\'ll flatten you!', 'That\'s not you pushing. I know.', 'It\'s all right, Wes.'], wesley: ['Get away from me, you brute!', 'That isn\'t you. It isn\'t.', 'It\'s all right, Brock.'] },
+  revive: { brock: ['Up. Get up. I am not carrying you out of here.', 'Hey! Eyes open, Wes.', 'I\'ve got you. Up we get.'], wesley: ['Get up. I refuse to explain this to your mother.', 'Brock! Come on!', 'Not without you. Up!'] },
+  free: { brock: ['Hold still, you baby. Don\'t look at the eyes.', 'Hold still. Nearly got it.', 'Got you. Easy.'], wesley: ['Stop thrashing, you oaf. There\'s a pin. There!', 'There\'s a release pin. There!', 'Got it. You\'re out.'] },
+  calm: { brock: ['Breathe. You\'re embarrassing both of us.', 'Easy. In and out.', 'I\'m right here. Breathe.'], wesley: ['You\'re hyperventilating. Stop it. It\'s pathetic.', 'Count backward with me.', 'It\'s all right. I\'m here too.'] },
+  liftTake: { brock: ['I\'ve got the heavy end. Obviously.', 'I\'ve got this end.', 'Got my end, Wes.'], wesley: ['Ready. Try using your legs instead of your mouth.', 'Ready when you are.', 'Ready, Brock.'] },
+  liftDone: { brock: ['Easy. You barely helped, twig-arms.', 'Ha. Not bad, Wes.', 'That\'s us. Good lift.'], wesley: ['I did most of that and you know it.', 'We did it. Don\'t gloat.', 'We did it!'] },
+  give: { brock: ['Here. Don\'t lose it, butterfingers.', 'Here. Yours.', 'Here you go, Wes.'], wesley: ['Take it. Carefully. It\'s cleverer than you are.', 'Here. Take it.', 'Here, Brock.'] },
   trapped: { brock: ['It\'s got my leg! It\'s LOOKING at me!', 'It\'s got my leg!', 'Wes! Trap!'], wesley: ['It has eyes. Why does it have eyes?!', 'It has eyes. Why does it have eyes?!', 'Brock! It\'s got me!'] },
-  gaze: { brock: ['Don\'t stare back.', 'Don\'t stare back.', 'Eyes down, Wes.'], wesley: ['It hasn\'t got any eyes. Why can I feel it looking?', 'Why can I feel it looking?', 'Don\'t look, Brock.'] },
-  thrown: { brock: ['What— where am I?', 'What— where am I?', 'Wes? Where\'d you go?'], wesley: ['The hand. It threw me.', 'The hand. It threw me.', 'Brock? Brock!'] },
-  down: { brock: ['Wes… go…', 'Wes…', 'Wes…'], wesley: ['Brock…', 'Brock…', 'Brock…'] },
-  key: { brock: ['Tell me that\'s the key.', 'That\'s it. That\'s the key.', 'That\'s our way out, Wes.'], wesley: ['She left it for us. Why?', 'She\'s letting us go.', 'She\'s letting us go, Brock.'] },
-  praise: { brock: ['Huh. Not bad, four-eyes.', 'Nice work, Wes.', 'That\'s my guy.'], wesley: ['Fine. That was competent.', 'That was actually brilliant.', 'Brilliant, Brock!'] },
-  deduce: { wesley: ['Obviously. It\'s a substitution cipher. Obviously.', 'Wait. I\'ve read about this.', 'I\'ve got it. Brock, I\'ve got it!'] },
+  gaze: { brock: ['Don\'t stare back, idiot.', 'Don\'t stare back.', 'Eyes down, Wes.'], wesley: ['It hasn\'t got any eyes. Why can I feel it looking?', 'Why can I feel it looking?', 'Don\'t look, Brock.'] },
+  thrown: { brock: ['What— where— don\'t you dare laugh!', 'What— where am I?', 'Wes? Where\'d you go?'], wesley: ['The hand. It threw me. Stop smirking!', 'The hand. It threw me.', 'Brock? Brock!'] },
+  doll: { brock: ['It\'s a doll. It\'s just a doll. Stop crying!', 'Somebody shut that doll up.', 'Don\'t listen to it, Wes.'], wesley: ['Porcelain can\'t cry. It can\'t.', 'Why won\'t it stop?', 'Brock, it\'s looking at us.'] },
+  down: { brock: ['Wesley… go…', 'Wes…', 'Wes…'], wesley: ['Brock…', 'Brock…', 'Brock…'] },
+  key: { brock: ['That\'s the key. I found it. Remember that.', 'That\'s it. That\'s the key.', 'That\'s our way out, Wes.'], wesley: ['She left it for us. Not that you\'d wonder why.', 'She\'s letting us go.', 'She\'s letting us go, Brock.'] },
+  praise: { brock: ['Huh. The bookworm\'s good for something.', 'Not bad, Wes.', 'That\'s my guy.'], wesley: ['Even you couldn\'t get that wrong.', 'That was… actually competent.', 'Brilliant, Brock!'] },
+  deduce: { wesley: ['Obviously. A child could see it. Well. Not you.', 'Wait. I\'ve read about this.', 'I\'ve got it. Brock, I\'ve got it!'] },
+  coin: { brock: ['Heads, I\'m right. Tails, you\'re wrong.', 'Come on, luck.', 'One more go, Wes.'], wesley: ['Statistically meaningless. Flip it anyway.', 'It\'s only a coin. Flip it.', 'For luck, Brock.'] },
+  salt: { brock: ['Back off, snowflake!', 'Stay back!', 'Not him. Not tonight.'], wesley: ['Salt. The books say salt. Please be right.', 'Stay behind the line!', 'She can\'t cross it. I think.'] },
 };
 const LIL_CHILL = ['“You\'re warm. I remember warm.”', '“Stay. I have so many games.”', '“Hold my hand. It only hurts at first.”'];
 const LIL_FINALE = ['“Go. Before she counts to a hundred.”', '“Don\'t look back at me.”'];
@@ -336,11 +343,12 @@ function bfs(S, sources, opt) {
   for (let i = 0; i < q.length; i++) {
     const k = q[i], n = m.get(k);
     if (opt.max != null && n.d >= opt.max) continue;
-    if (n.d > 0 && (isExit(n.pos) || activeTrapAt(S, n.pos))) continue;
+    if (n.d > 0 && (isExit(n.pos) || activeTrapAt(S, n.pos) || (opt.stop && opt.stop(n.pos)))) continue;
     for (const nb of neighbors(S, n.pos)) {
       const nk = key(nb);
       if (m.has(nk)) continue;
       if (opt.noTraps && activeTrapAt(S, nb)) continue;
+      if (opt.avoid && opt.avoid(nb)) continue;
       m.set(nk, { pos: nb, d: n.d + 1, prev: k }); q.push(nk);
     }
   }
@@ -352,16 +360,24 @@ function pathTo(m, dest) {
   return out;
 }
 function movePts(h, roll) { const s = CFG.speed[h.id]; return Math.max(1, roll <= 2 ? s - 1 : roll <= 4 ? s : s + 1); }
+// The fixed hazards reach a set distance, counted in spaces.
+const inRec = (S, p) => p.f === 'U' && manh(p, S.recPos) <= CFG.recordRange;
+const inDoll = (S, p) => p.f === 'U' && manh(p, S.dollPos) <= CFG.dollRange;
+// The blue hand goes for anyone who comes close, unless he carries Lil's record or it already has someone lying in its reach.
+const recThreat = (S, h) => !S.record.calmed && !h.inv.includes('record') && !heroList(S).some(x => x.down && inRec(S, x));
 function reach(S, h, pts) {
-  const m = bfs(S, [h], { max: pts });
+  const hand = recThreat(S, h) && !inRec(S, h), stop = hand ? p => inRec(S, p) : null;
+  const m = bfs(S, [h], { max: pts, stop });
+  const dollLive = !h.dolled && !inDoll(S, h);
+  const safe = dollLive ? bfs(S, [h], { max: pts, stop, avoid: p => inDoll(S, p) }) : m; // a way round the doll, where there is one
   const p = partner(S, h); const tiles = [];
   for (const n of m.values()) {
     if (n.d === 0) continue;
     if (!p.escaped && same(p, n.pos)) continue;
     if (same(S.hollow, n.pos) || same(S.ghost, n.pos)) continue;
-    tiles.push({ f: n.pos.f, c: n.pos.c, r: n.pos.r, d: n.d, trap: !!activeTrapAt(S, n.pos), exit: isExit(n.pos) });
+    tiles.push({ f: n.pos.f, c: n.pos.c, r: n.pos.r, d: n.d, trap: !!activeTrapAt(S, n.pos), exit: isExit(n.pos), hand: hand && inRec(S, n.pos), doll: dollLive && !safe.has(key(n.pos)) });
   }
-  return { map: m, tiles };
+  return { map: m, safe, tiles };
 }
 const adjObj = (h, o) => h.f === o.f && o.t.some(([c, r]) => Math.abs(c - h.c) + Math.abs(r - h.r) === 1);
 function adjTilesOfObj(S, o) {
@@ -405,13 +421,25 @@ const stepOf = (S, h) => (!h.got ? 'find' : !S.coopDone ? 'coop' : !h.useDone ? 
 const chainsDone = S => heroList(S).every(h => h.useDone) && S.coopDone;
 const ghostSpeed = S => (S.time >= CFG.ghostLateAt ? CFG.ghostMoveLate : CFG.ghostMove) + (S.key.state !== 'hidden' ? 1 : 0);
 const hollowSpeed = S => (S.time >= CFG.hollowLateAt ? CFG.hollowMoveLate : CFG.hollowMove);
+const roomOf = o => roomAt(o.f, o.t[0][0], o.t[0][1]);
+const theRoom = r => (r.indexOf('Lil') === 0 ? r : 'the ' + r);
+const roomPieces = (S, room) => S.objs.filter(o => o.search && roomOf(o) === room);
+// Where an item is, as far as the players can know: in a hand, on the floor, or under one of the tokens in its room.
 function locate(S, item) {
   for (const h of heroList(S)) if (h.inv.includes(item)) return { where: 'hero', id: h.id };
   const g = S.ground.find(x => x.item === item); if (g) return { where: 'ground', pos: g };
-  for (const id in S.loot) if (!S.searched[id] && S.loot[id].item === item) return { where: 'obj', id };
+  const ch = Object.values(CHAINS).find(c => c.item === item);
+  if (ch) { const objs = roomPieces(S, ch.room).filter(o => !S.searched[o.id]); if (objs.length) return { where: 'room', room: ch.room, objs }; }
   return null;
 }
-const canReroll = S => S.insight >= CFG.rerollCost && awake(S.heroes.wesley) && !S.heroes.wesley.possessed;
+// The Lucky Sixpence: whoever carries it may discard it to roll one die again.
+const coinHolder = S => heroList(S).find(h => awake(h) && !h.possessed && h.inv.includes('sixpence'));
+const canReroll = S => !!coinHolder(S);
+function* spendCoin(S) {
+  const h = coinHolder(S); h.inv.splice(h.inv.indexOf('sixpence'), 1);
+  yield* say(S, h.id, 'coin');
+  yield { t: 'log', text: h.name + ' flips the Lucky Sixpence. The die is rolled again.' };
+}
 
 /* ---------- setup ---------- */
 function newGame(opts) {
@@ -420,7 +448,7 @@ function newGame(opts) {
   let deal = opts.deal;
   if (!deal) {
     if (opts.guided) deal = { brock: 'portrait', wesley: 'cipher', coop: 'A' };
-    else { const ids = shuffle(S, Object.keys(CHAINS)); deal = { brock: ids[0], wesley: ids[1], coop: S.rng() < 0.5 ? 'A' : 'B' }; }
+    else { let ids; do { ids = shuffle(S, Object.keys(CHAINS)); } while (!CHAINS[ids[0]].brain && !CHAINS[ids[1]].brain); deal = { brock: ids[0], wesley: ids[1], coop: S.rng() < 0.5 ? 'A' : 'B' }; } // always one thinking task, so Wesley's Deduction has a use
   }
   S.deal = deal; S.variant = deal.coop;
   S.objs = buildObjects(S.variant);
@@ -432,18 +460,48 @@ function newGame(opts) {
   if (opts.mode === 'auto') { S.heroes.brock.npc = true; S.heroes.wesley.npc = true; }
   S.ghost = { f: 'U', c: 3, r: 6, dir: 2, entranced: 0 };
   S.hollow = { f: 'U', c: 9, r: 2, dir: 2, sensed: false };
-  S.traps = [{ id: 0, f: 'G', c: 4, r: 1, dormant: 0, holding: null }, { id: 1, f: 'U', c: 9, r: 5, dormant: 0, holding: null }];
-  S.record = { timer: CFG.recordTimer, calmed: false };
+  S.record = { calmed: false };
+  const gp = obj(S, 'gramophone').t[0], dp = obj(S, 'doll').t[0];
+  S.recPos = { f: 'U', c: gp[0], r: gp[1] }; S.dollPos = { f: 'U', c: dp[0], r: dp[1] };
   S.coopDone = false; S.searched = {}; S.ground = []; S.clues = {}; S.memories = 0;
   S.key = { state: 'hidden' }; S.over = null; S.turn = null; S.scenes = {}; S.tips = {}; S.bondRound = {};
   S.script = { possession: !!opts.guided };
   S.done = {}; S.ai = { brock: {}, wesley: {} };
-  // what is inside the furniture
-  S.loot = { shelfE: { k: 'clue', id: 'mother' }, chest: { k: 'clue', id: 'lucien' }, vanity: { k: 'clue', id: 'diary' }, case: { k: 'clue', id: 'ritual' }, console: { k: 'clue', id: 'father' } };
-  for (const id of ['brock', 'wesley']) { const ch = CHAINS[deal[id]]; S.loot[ch.find] = { k: 'chain', item: ch.item }; }
-  const pool = shuffle(S, ['salts', 'salts', 'bandage', 'bandage', 'scare', 'dust']);
-  for (const o of S.objs) if (o.search && !S.loot[o.id]) { const x = pool.pop(); S.loot[o.id] = x === 'scare' || x === 'dust' ? { k: x } : { k: 'loot', item: x }; }
+  layTraps(S);
+  // The search tokens: one face down on every piece of furniture. Each objective item goes somewhere in its own room.
+  S.loot = {};
+  const showcase = opts.guided && deal.brock === 'portrait' && deal.wesley === 'cipher';
+  if (showcase) Object.assign(S.loot, { shelfW: { k: 'chain', item: 'fragment' }, chest: { k: 'chain', item: 'cipher' }, shelfE: { k: 'clue', id: 'mother' }, desk: { k: 'clue', id: 'lucien' }, vanity: { k: 'clue', id: 'diary' } });
+  else for (const id of ['brock', 'wesley']) { const ch = CHAINS[deal[id]]; S.loot[pickOf(S, roomPieces(S, ch.room)).id] = { k: 'chain', item: ch.item }; }
+  const pool = ['salts', 'salts', 'bandage', 'bandage', 'sixpence', 'sixpence', 'salt', 'salt', 'scare', 'scare'];
+  if (!showcase) pool.push(...shuffle(S, ['mother', 'lucien', 'diary', 'ritual', 'father']).slice(0, 3).map(id => 'clue:' + id));
+  shuffle(S, pool);
+  for (const o of S.objs) if (o.search && !S.loot[o.id]) { const x = pool.pop() || 'scare'; S.loot[o.id] = x === 'scare' ? { k: x } : x.indexOf('clue:') === 0 ? { k: 'clue', id: x.slice(5) } : { k: 'loot', item: x }; }
+  S.loreTotal = 1 + Object.values(S.loot).filter(x => x.k === 'clue').length; // the cellar hatch is lore too
   return S;
+}
+
+// Entity Traps are set out at the start and never move. First Night uses a fixed layout; other nights draw five spots.
+const TRAP_SPOTS = { G: [[13, 2], [5, 2], [10, 5], [8, 1], [15, 6], [3, 5]], U: [[16, 2], [4, 3], [10, 3], [8, 6]] };
+const TRAP_FIRST = [['G', 13, 2], ['G', 5, 2], ['G', 10, 5], ['U', 9, 5], ['U', 16, 2]];
+// Where the blue hand throws you: six chalk marks on the upper floor, one per face of the die. Mark 5 has a trap on it.
+const MARKS = [[2, 2], [4, 6], [8, 2], [11, 5], [9, 5], [15, 2]];
+function layTraps(S) {
+  const mkT = list => list.map(([f, c, r], id) => ({ id, f, c, r, dormant: 0, holding: null }));
+  S.traps = [];
+  if (!S.opts.guided) for (let i = 0; i < 40; i++) {
+    const g = shuffle(S, TRAP_SPOTS.G.slice()).slice(0, 3).map(p => ['G', p[0], p[1]]), u = shuffle(S, TRAP_SPOTS.U.slice()).slice(0, 1).map(p => ['U', p[0], p[1]]);
+    S.traps = mkT(g.concat([['U', 9, 5]], u));
+    if (connected(S)) return;
+  }
+  S.traps = mkT(TRAP_FIRST);
+}
+// Every place the heroes need can still be walked to without stepping in a trap or into the blue hand's reach.
+function connected(S) {
+  const m = bfs(S, [{ f: 'G', c: 9, r: 7 }], { noTraps: true, avoid: p => inRec(S, p) });
+  const need = [DOORFRONT];
+  for (const o of S.objs) if (o.search || o.obstacle || ['hatch', 'strongbox', 'portrait', 'clock'].includes(o.id)) need.push(adjTilesOfObj(S, o));
+  return need.every(ts => ts.some(t => m.has(key(t))));
 }
 
 /* ---------- what a hero may do right now ---------- */
@@ -494,8 +552,9 @@ function options(S, h) {
   }
   if (h.inv.includes('salts') && h.fright > 0) o.push({ type: 'useitem', item: 'salts', target: h.id, label: 'Use Smelling Salts (−' + CFG.saltsAmount + ' Fright)', cost: 1 });
   if (h.inv.includes('bandage') && h.hearts < h.maxHearts) o.push({ type: 'useitem', item: 'bandage', target: h.id, label: 'Use Bandage (+1 heart)', cost: 1 });
+  if (h.inv.includes('salt') && S.ghost.f === h.f && cheb(h, S.ghost) <= CFG.saltRange && S.ghost.entranced <= 0) o.push({ type: 'useitem', item: 'salt', target: h.id, label: 'Scatter the Pouch of Salt (Lil\' is held still this haunt)', cost: 1 });
   if (HIDES[key(h)] && !h.hidden && !h.trapped) o.push({ type: 'hide', label: 'Hide behind the ' + HIDES[key(h)], cost: 1 });
-  if (h.id === 'wesley' && S.insight >= CFG.deduceCost) { const t = deduceTarget(S); if (t) o.push({ type: 'deduce', target: t.id, label: 'Deduce: solve ' + (t === h ? 'your' : t.name + '\'s') + ' puzzle (−' + CFG.deduceCost + ' Insight)', cost: 1 }); }
+  if (h.id === 'wesley' && S.insight >= CFG.deduceCost) { const t = deduceTarget(S); if (t) o.push({ type: 'deduce', target: t.id, label: 'Deduction: finish ' + (t === h ? 'your' : t.name + '\'s') + ' thinking task now (−' + CFG.deduceCost + ' Insight)', cost: 1 }); }
   if (isDoorFront(h) && !S.door.open) {
     if (h.inv.includes('masterkey')) o.push({ type: 'unlock', label: 'Unlock the front door', cost: 1 });
     else if (S.key.state !== 'hidden') o.push({ type: 'unlock', label: 'Unlock the front door', cost: 1, disabled: true, why: 'Locked. Whoever holds the Master Key opens it.' });
@@ -508,11 +567,12 @@ const sameOpt = (a, b) => a.type === b.type && a.obj === b.obj && a.help === b.h
 // How much longer is the way to `goal` because the blocked route has not been lifted yet?
 function routeInfo(S, h, goal) {
   if (S.coopDone || !goal.length) return null;
-  const ob = obj(S, S.obstacle), dist = () => { const n = bfs(S, goal, { noTraps: true }).get(key(h)); return n ? n.d : 1e9; };
+  const ob = obj(S, S.obstacle), av = recThreat(S, h) && !inRec(S, h) ? q => inRec(S, q) : null, dist = () => { const n = bfs(S, goal, { noTraps: true, avoid: av }).get(key(h)); return n ? n.d : 1e9; };
   const long = dist(), saved = S.block, freed = (ob.id === 'cabinet' ? [[11, 2]] : ob.t).map(([c, r]) => key(ob.f, c, r));
   S.block = new Set([...saved].filter(k => !freed.includes(k))); const short = dist(); S.block = saved;
   return long - short >= 4 ? { long, short, name: ob.name.toLowerCase() } : null;
 }
+const roomGoal = (S, l) => [].concat(...l.objs.map(o => adjTilesOfObj(S, o)));
 function hint(S, h) {
   const p = partner(S, h), ch = CHAINS[h.chain];
   if (h.trapped) return 'Caught in the trap. Break free (roll ' + CFG.trapBreak[h.id] + '+), or ' + p.name + ' can free you.';
@@ -527,12 +587,16 @@ function hint(S, h) {
   const where = it => { const l = locate(S, it); if (!l) return ''; if (l.where === 'ground') return 'It was thrown. Walk over it to pick it up.'; if (l.where === 'hero' && l.id !== h.id) return p.name + ' is carrying it. Stand beside him so he can hand it over.'; return ''; };
   if (st === 'find') {
     const l = locate(S, ch.item); let out = ch.findTitle + ': ' + (where(ch.item) || ch.findText);
-    if (l && l.where === 'obj') { const ri = routeInfo(S, h, adjTilesOfObj(S, obj(S, l.id))); if (ri) out += ' The ' + ri.name + ' is in the way: ' + ri.long + ' spaces round, or ' + ri.short + ' once you and ' + p.name + ' lift it.'; }
+    if (l && l.where === 'room') {
+      const left = l.objs.map(o => o.name);
+      out = ch.findTitle + ': hunt for it in ' + theRoom(l.room) + '. ' + (left.length === 1 ? 'Only the ' + left[0] + ' is left to search, so it is there.' : 'It is under one of these tokens: ' + left.join(', ') + '.');
+      const ri = routeInfo(S, h, roomGoal(S, l)); if (ri) out += ' The ' + ri.name + ' is in the way: ' + ri.long + ' spaces round, or ' + ri.short + ' once you and ' + p.name + ' lift it.';
+    }
     return out;
   }
   if (st === 'coop') { const ob = obj(S, S.obstacle); return 'Shared task: meet ' + p.name + ' at the ' + ob.name + ' and lift it together. One action each.'; }
   if (st === 'use') return ch.useTitle + ': ' + (h.inv.includes(ch.item) ? ch.useText : where(ch.item));
-  return 'Your cards are done. Help ' + p.name + ', or search the rooms for clues.';
+  return 'Your cards are done. Help ' + p.name + ', or turn over more search tokens: most hide something useful.';
 }
 
 /* ---------- effects ---------- */
@@ -614,6 +678,7 @@ function* protect(S, w, why) {
   yield { t: 'log', cls: 'good', text: 'Protection: Brock steps into the blow meant for Wesley.' + cost };
   yield* hurt(S, b, 1, why);
   yield* say(S, 'wesley', 'protected');
+  if (awake(b)) yield* say(S, 'brock', 'gloat');
   yield* addBond(S, 1, 'protect');
 }
 function* gainItem(S, h, item) {
@@ -632,7 +697,7 @@ function* snapTrap(S, tr, h) {
   yield { t: 'log', cls: 'bad', text: 'The Entity Trap snaps shut on ' + h.name + '. He cannot move.' };
   yield* say(S, h.id, 'trapped');
   yield* scare(S, h, 1, 'trap');
-  yield* tip(S, 'trap', 'A trapped hero cannot move. He can spend an action to roll free, or his partner can free him from an adjacent space.');
+  yield* tip(S, 'trap', 'A trapped hero cannot move. He can spend an action to roll free, or his partner can free him from an adjacent space. Entity Traps never move, and you cannot walk through one.');
 }
 function* revealKey(S) {
   if (S.key.state !== 'hidden') return;
@@ -668,13 +733,12 @@ function* doMove(S, h) {
     const pts = movePts(h, roll), R = reach(S, h, pts);
     const ans = yield { t: 'chooseMove', hero: h.id, roll, pts, tiles: R.tiles, canReroll: !rerolled && canReroll(S) };
     if (ans && ans.reroll && !rerolled && canReroll(S)) {
-      rerolled = true; yield* addInsight(S, -CFG.rerollCost); roll = d6(S);
-      yield { t: 'log', text: 'Wesley second-guesses the roll.' };
+      rerolled = true; yield* spendCoin(S); roll = d6(S);
       yield { t: 'die', who: h.id, value: roll, pts: movePts(h, roll) }; continue;
     }
     if (!ans || same(ans, h)) return;
     const tile = R.tiles.find(x => same(x, ans)); if (!tile) return;
-    const path = pathTo(R.map, tile);
+    const path = pathTo(R.safe.has(key(tile)) ? R.safe : R.map, tile);
     if (tile.exit) {
       const p = partner(S, h);
       if (p.down) {
@@ -688,7 +752,15 @@ function* doMove(S, h) {
   }
 }
 function* walk(S, h, path) {
-  const from = { f: h.f, c: h.c, r: h.r }, last = path[path.length - 1];
+  const from = { f: h.f, c: h.c, r: h.r };
+  let rec = inRec(S, h), doll = inDoll(S, h), cry = false, grab = false;
+  for (let i = 0; i < path.length; i++) { // the fixed hazards act the moment a hero comes within reach
+    const q = path[i], d = inDoll(S, q), r = inRec(S, q);
+    if (d && !doll) cry = true; doll = d;
+    if (r && !rec && recThreat(S, h)) { grab = true; path = path.slice(0, i + 1); break; }
+    rec = r;
+  }
+  const last = path[path.length - 1];
   const passed = path.some(p => same(p, S.hollow));
   Object.assign(h, { f: last.f, c: last.c, r: last.r });
   yield { t: 'move', id: h.id, path, from };
@@ -696,7 +768,46 @@ function* walk(S, h, path) {
   for (const p of path) { const g = S.ground.find(x => same(x, p)); if (g) yield* pickup(S, h, g); }
   if (isExit(last)) { h.escaped = true; yield { t: 'log', cls: 'good', text: h.name + ' is out of the manor.' }; return; }
   const tr = activeTrapAt(S, last); if (tr) yield* snapTrap(S, tr, h);
+  if (cry) yield* dollCry(S, h);
+  if (grab) yield* recordGrab(S, h);
 }
+// The Weeping Doll: the first time each round a hero comes within reach of her.
+function* dollCry(S, h) {
+  if (h.dolled || !awake(h)) return; h.dolled = true;
+  yield { t: 'fx', kind: 'doll', id: h.id };
+  yield { t: 'log', cls: 'hazard', text: 'The Weeping Doll turns her wet face toward ' + h.name + '. Her sobbing gets inside his head.' };
+  yield* scare(S, h, CFG.dollFright, 'doll');
+  if (h.fright < 3) yield* say(S, h.id, 'doll');
+  yield* tip(S, 'doll', 'The Weeping Doll gives 1 Fright the first time each round you come within ' + CFG.dollRange + ' spaces of her. Her reach is tinted on the floor; the board picks a way round it when there is one.');
+}
+// The Haunted Record Player: come too close and the blue hand takes you.
+function* recordGrab(S, h) {
+  yield { t: 'fx', kind: 'record', hit: true };
+  yield { t: 'log', cls: 'hazard', text: 'Too close. A pale blue hand shoots out of the horn and closes on ' + h.name + '.' };
+  const res = yield* damage(S, h, CFG.recordDamage, 'record');
+  yield* tip(S, 'record', 'Come within ' + CFG.recordRange + ' spaces of the Haunted Record Player and the blue hand grabs you: lose a heart, then roll the die and be thrown to the chalk mark with that number. Whoever carries Lil\'s Record is safe from it.');
+  if (res === 'protected') { yield { t: 'log', cls: 'hazard', text: 'The hand closes on Brock instead, and lets go.' }; return; }
+  if (res !== 'hurt') return;
+  const roll = d6(S);
+  yield { t: 'die', who: h.id, value: roll, what: 'thrown to mark ' + roll };
+  let to = { f: 'U', c: MARKS[roll - 1][0], r: MARKS[roll - 1][1] };
+  const busy = q => heroList(S).some(x => x !== h && !x.escaped && same(x, q)) || same(q, S.hollow) || same(q, S.ghost) || S.traps.some(t => t.holding && same(t, q));
+  if (busy(to)) { const near = [...bfs(S, [to], { max: 3, noTraps: true }).values()].filter(n => n.d > 0 && !busy(n.pos) && !inRec(S, n.pos) && !STAIRS[key(n.pos)]).sort((a, b) => a.d - b.d)[0]; if (near) to = near.pos; }
+  const from = { f: h.f, c: h.c, r: h.r };
+  releaseTrap(S, h); h.holding = false; Object.assign(h, to);
+  yield { t: 'teleport', id: h.id, from, thrown: true };
+  yield { t: 'log', cls: 'bad', text: 'The hand flings ' + h.name + ' across the floor to chalk mark ' + roll + ', in ' + theRoom(roomAt(to.f, to.c, to.r)) + '.' };
+  if (!awake(h)) return;
+  yield* say(S, h.id, 'thrown');
+  const tr = activeTrapAt(S, h); if (tr) yield* snapTrap(S, tr, h);
+  if (inDoll(S, h)) yield* dollCry(S, h);
+}
+const ITEM_TIPS = {
+  salts: 'Smelling Salts: spend an action to lose 2 Fright.',
+  bandage: 'Bandage: spend an action to give yourself, or your partner beside you, 1 heart back.',
+  sixpence: 'Lucky Sixpence: discard it to roll one die again, your own move or the haunt\'s. The game offers it when it could help.',
+  salt: 'Pouch of Salt: when Lil\' is within ' + CFG.saltRange + ' spaces, spend an action to scatter it. She stays where she is through the next haunt.',
+};
 function* doSearch(S, h, o) {
   h.actions--; S.searched[o.id] = true;
   const L = S.loot[o.id] || { k: 'dust' };
@@ -709,7 +820,8 @@ function* doSearch(S, h, o) {
     if (!mine) yield* tip(S, 'other', 'That item belongs to the other hero\'s cards. Stand beside him and hand it over.');
   } else if (L.k === 'clue') yield* clue(S, h, L.id);
   else if (L.k === 'loot') {
-    yield { t: 'log', cls: 'good', text: h.name + ' finds ' + (L.item === 'salts' ? 'Smelling Salts' : 'a Bandage') + ' in the ' + o.name + '.' };
+    yield { t: 'log', cls: 'good', text: h.name + ' finds ' + ITEMS[L.item].a + ' in the ' + o.name + '.' };
+    yield* tip(S, 'item_' + L.item, ITEM_TIPS[L.item]);
     yield* gainItem(S, h, L.item); yield* say(S, h.id, 'loot');
   } else if (L.k === 'scare') {
     yield { t: 'log', cls: 'bad', text: 'Something cold closes round ' + h.name + '\'s wrist inside the ' + o.name + ', and lets go.' };
@@ -718,9 +830,9 @@ function* doSearch(S, h, o) {
 }
 function* clue(S, h, id) {
   S.clues[id] = true;
-  yield { t: 'card', card: Object.assign({ kind: 'clue', effect: 'Clue found. Gain 1 Insight.' }, CLUES[id]) };
+  yield { t: 'card', card: Object.assign({ kind: 'clue', effect: 'Lore found. Wesley gains 1 Insight.' }, CLUES[id]) };
   yield* addInsight(S, 1);
-  yield* tip(S, 'insight', 'Insight belongs to Wesley. Spend 1 to reroll any die, including the haunt\'s. Spend 2 to Deduce a thinking task without doing the work.');
+  yield* tip(S, 'insight', 'Insight belongs to Wesley. With ' + CFG.deduceCost + ' he can use Deduction: finish a thinking objective on the spot, his own or Brock\'s beside him, from anywhere in the house. Lore and Lil\'s memories give Insight.');
 }
 function* doLift(S, h, o) {
   const p = partner(S, h);
@@ -775,12 +887,17 @@ function* sabotage(S, h) {
   const p = partner(S, h);
   h.possessed = false; h.actions = Math.max(0, h.actions - 1);
   yield { t: 'log', cls: 'ghost', text: 'Lil\' moves ' + h.name + '\'s hands for him.' };
+  let lure = null; // a trap near enough for her to walk him into
+  if (!h.holding && !h.trapped) { const m = bfs(S, [h], { max: CFG.trapLure }); const tr = S.traps.filter(t => !t.holding && t.dormant <= 0 && m.has(key(t)) && !heroList(S).some(x => same(x, t))).sort((a, b) => m.get(key(a)).d - m.get(key(b)).d)[0]; if (tr) lure = pathTo(m, tr); }
   if (h.holding) {
     h.holding = false;
     yield { t: 'fx', kind: 'slam', obj: S.obstacle };
     yield { t: 'log', cls: 'bad', text: 'Sabotage. ' + h.name + ' lets his end of the ' + obj(S, S.obstacle).short + ' crash to the floor.' };
+  } else if (lure) {
+    yield { t: 'log', cls: 'bad', text: 'Sabotage. Lil\' walks ' + h.name + ' straight toward the Entity Trap.' };
+    yield* walk(S, h, lure);
   } else if (h.inv.length) {
-    const pri = ['masterkey', 'cipher', 'fragment', 'record', 'windkey', 'bandage', 'salts'];
+    const pri = ['masterkey', 'cipher', 'fragment', 'record', 'windkey', 'sixpence', 'salt', 'bandage', 'salts'];
     const item = pri.find(i => h.inv.includes(i));
     h.inv.splice(h.inv.indexOf(item), 1);
     const m = bfs(S, [h], { max: 4, noTraps: true });
@@ -799,8 +916,8 @@ function* sabotage(S, h) {
     yield* say(S, p.id, 'shoved');
     if (S.bond < CFG.bondBackToBack) yield* addBond(S, -1, 'sabotage');
   } else {
-    const R = reach(S, h, 2).tiles.filter(t => !t.trap && !t.exit);
-    if (R.length && !h.trapped) { const t = pickOf(S, R); const m = bfs(S, [h], { max: 2 }); const path = pathTo(m, t), from = { f: h.f, c: h.c, r: h.r }; Object.assign(h, { f: t.f, c: t.c, r: t.r }); yield { t: 'move', id: h.id, path, from }; }
+    const R = reach(S, h, 2).tiles.filter(t => !t.trap && !t.exit && !t.hand);
+    if (R.length && !h.trapped) { const t = pickOf(S, R); yield* walk(S, h, pathTo(bfs(S, [h], { max: 2 }), t)); }
     yield { t: 'log', cls: 'bad', text: h.name + ' wanders where she walks him, and wakes somewhere else.' };
     yield* scare(S, h, 1, 'possess');
   }
@@ -826,7 +943,11 @@ function* doUseItem(S, h, item, targetId) {
   const t = S.heroes[targetId]; h.actions--;
   h.inv.splice(h.inv.indexOf(item), 1);
   if (item === 'salts') { yield { t: 'log', text: h.name + ' uses the Smelling Salts.' }; yield* soothe(S, t, CFG.saltsAmount); }
-  else { t.hearts = Math.min(t.maxHearts, t.hearts + CFG.bandageAmount); yield { t: 'fx', kind: 'heal', id: t.id, amt: 1 }; yield { t: 'log', cls: 'good', text: h.name + ' bandages ' + (t === h ? 'himself' : t.name) + '.' }; if (t !== h) yield* addBond(S, 1, 'bandage'); }
+  else if (item === 'salt') {
+    S.ghost.entranced = Math.max(S.ghost.entranced, 1);
+    yield* say(S, h.id, 'salt'); yield { t: 'fx', kind: 'salt', id: h.id };
+    yield { t: 'log', cls: 'good', text: h.name + ' scatters the salt. Lil\' stops at the line, and will not move or touch anyone this haunt.' };
+  } else { t.hearts = Math.min(t.maxHearts, t.hearts + CFG.bandageAmount); yield { t: 'fx', kind: 'heal', id: t.id, amt: 1 }; yield { t: 'log', cls: 'good', text: h.name + ' bandages ' + (t === h ? 'himself' : t.name) + '.' }; if (t !== h) yield* addBond(S, 1, 'bandage'); }
 }
 function* doBreakFree(S, h) {
   h.actions--;
@@ -848,7 +969,7 @@ function* perform(S, h, act) {
       h.actions--; h.useWork++; const ch = CHAINS[h.chain];
       yield { t: 'fx', kind: 'work', id: h.id, obj: real.obj };
       if (h.useWork >= ch.work) yield* completeUse(S, h);
-      else { yield { t: 'log', text: h.name + ' works at it. ' + h.useWork + ' of ' + ch.work + '.' }; if (ch.brain) yield* tip(S, 'brain', 'This is a thinking task. Wesley can Deduce it for 2 Insight instead of spending the second action.'); }
+      else { yield { t: 'log', text: h.name + ' works at it. ' + h.useWork + ' of ' + ch.work + '.' }; if (ch.brain) yield* tip(S, 'brain', 'This is a thinking task. Wesley\'s Deduction finishes it at once for ' + CFG.deduceCost + ' Insight, instead of the second action.'); }
       break;
     }
     case 'help': yield* doHelp(S, h, real.help); break;
@@ -856,7 +977,7 @@ function* perform(S, h, act) {
     case 'useitem': yield* doUseItem(S, h, real.item, real.target); break;
     case 'hide': h.actions--; h.hidden = true; h.holding = false; yield { t: 'log', text: h.name + ' slips behind the ' + HIDES[key(h)] + '. Nothing can find him until his next turn.' }; break;
     case 'breakfree': yield* doBreakFree(S, h); break;
-    case 'deduce': { h.actions--; yield* addInsight(S, -CFG.deduceCost); yield* say(S, 'wesley', 'deduce'); const t = S.heroes[real.target]; yield { t: 'log', cls: 'good', text: 'Deduction. Wesley solves it in his head.' }; yield* completeUse(S, t); break; }
+    case 'deduce': { h.actions--; yield* addInsight(S, -CFG.deduceCost); yield* say(S, 'wesley', 'deduce'); const t = S.heroes[real.target]; yield { t: 'log', cls: 'good', text: 'Deduction. Wesley has the answer before anyone has touched it.' }; yield* completeUse(S, t); break; }
     case 'unlock': h.actions--; S.door.open = true; yield { t: 'fx', kind: 'door' }; yield { t: 'card', card: STORY.doorOpen }; break;
   }
   return true;
@@ -911,8 +1032,8 @@ function* ghostPhase(S) {
   const bad = p => p.kind === 'possess' || (p.chills && p.chills.length);
   if (bad(plan) && canReroll(S)) {
     const what = plan.kind === 'possess' ? 'Possession: she will take ' + S.heroes[plan.target].name + '.' : GHOST_NAMES[roll] + ': her touch will reach ' + plan.chills.map(i => S.heroes[i].name).join(' and ') + '.';
-    const ans = yield { t: 'ask', kind: 'reroll', hero: 'wesley', who: 'ghost', what };
-    if (ans) { yield* addInsight(S, -CFG.rerollCost); roll = d6(S); plan = ghostPlan(S, roll, t); yield { t: 'log', text: 'Wesley second-guesses the haunt.' }; yield { t: 'die', who: 'ghost', value: roll, name: GHOST_NAMES[roll] }; }
+    const ans = yield { t: 'ask', kind: 'reroll', hero: coinHolder(S).id, who: 'ghost', what };
+    if (ans) { yield* spendCoin(S); roll = d6(S); plan = ghostPlan(S, roll, t); yield { t: 'die', who: 'ghost', value: roll, name: GHOST_NAMES[roll] }; }
   }
   if (plan.kind === 'shift') {
     const from = { f: g.f, c: g.c, r: g.r }; g.f = g.f === 'G' ? 'U' : 'G';
@@ -978,8 +1099,8 @@ function* hollowPhase(S) {
   const bad = p => (p.kind === 'forced' && p.target) || (p.gazed && p.gazed.length);
   if (bad(plan) && canReroll(S)) {
     const what = plan.kind === 'forced' ? 'Forced Gaze: ' + S.heroes[plan.target].name + ' gains ' + CFG.forcedGazeFright + ' Fright.' : HOLLOW_NAMES[roll] + ': his gaze will fall on ' + plan.gazed.map(i => S.heroes[i].name).join(' and ') + '.';
-    const ans = yield { t: 'ask', kind: 'reroll', hero: 'wesley', who: 'hollow', what };
-    if (ans) { yield* addInsight(S, -CFG.rerollCost); roll = d6(S); plan = hollowPlan(S, roll); yield { t: 'log', text: 'Wesley second-guesses the haunt.' }; yield { t: 'die', who: 'hollow', value: roll, name: HOLLOW_NAMES[roll] }; }
+    const ans = yield { t: 'ask', kind: 'reroll', hero: coinHolder(S).id, who: 'hollow', what };
+    if (ans) { yield* spendCoin(S); roll = d6(S); plan = hollowPlan(S, roll); yield { t: 'die', who: 'hollow', value: roll, name: HOLLOW_NAMES[roll] }; }
   }
   if (plan.kind === 'forced') {
     if (!plan.target) { yield { t: 'log', cls: 'hollow', text: 'The Hollow turns his head slowly from side to side, and finds no one.' }; return; }
@@ -1005,63 +1126,12 @@ function* hollowPhase(S) {
   }
   if (seen.length) yield* tip(S, 'gaze', 'The Hollow frightens whoever stands in the pale cone in front of him, up to 5 spaces, when the haunt ends. Walls block it. Stay behind him.');
 }
-function trapOK(S, f, c, r) {
-  if (MAPS[f][r][c] !== '.' || S.block.has(key(f, c, r)) || STAIRS[key(f, c, r)] || HIDES[key(f, c, r)]) return false;
-  for (const [dc, dr] of DIRS) { const ch = MAPS[f][r + dr] && MAPS[f][r + dr][c + dc]; if (ch === '+' || STAIRS[key(f, c + dc, r + dr)]) return false; }
-  return true;
-}
+// The hazards never move. All that happens here is a sprung trap setting itself again.
 function* hazardPhase(S) {
-  // Entity Traps creep toward anyone close
   for (const tr of S.traps) {
-    if (tr.holding) continue;
-    if (tr.dormant > 0) { tr.dormant--; if (tr.dormant > 0) continue; const on = heroList(S).find(h => awake(h) && same(h, tr)); if (on) { yield* snapTrap(S, tr, on); } continue; }
-    const m = new Map([[key(tr), { pos: { f: tr.f, c: tr.c, r: tr.r }, d: 0, prev: null }]]); const q = [key(tr)];
-    let target = null;
-    for (let i = 0; i < q.length && !target; i++) {
-      const n = m.get(q[i]); if (n.d >= CFG.trapNotice) continue;
-      for (const [dc, dr] of DIRS) {
-        const p = { f: tr.f, c: n.pos.c + dc, r: n.pos.r + dr }, k = key(p); if (m.has(k)) continue;
-        const hero = heroList(S).find(h => awake(h) && !h.hidden && !h.trapped && same(h, p));
-        if (hero && trapOK(S, p.f, p.c, p.r)) { m.set(k, { pos: p, d: n.d + 1, prev: q[i] }); target = { hero, k }; break; }
-        if (!trapOK(S, p.f, p.c, p.r) || S.traps.some(x => x !== tr && same(x, p))) continue;
-        m.set(k, { pos: p, d: n.d + 1, prev: q[i] }); q.push(k);
-      }
-    }
-    if (!target) continue;
-    const path = pathTo(m, m.get(target.k).pos); const step = path[0], from = { f: tr.f, c: tr.c, r: tr.r };
-    tr.c = step.c; tr.r = step.r;
-    yield { t: 'move', id: 'trap' + tr.id, path: [step], from };
-    if (same(step, target.hero)) yield* snapTrap(S, tr, target.hero);
-    else { yield { t: 'log', cls: 'hazard', text: 'The Entity Trap inches toward ' + target.hero.name + '. Two white eyes blink in its dark.' }; yield* tip(S, 'creep', 'Entity Traps creep 1 space toward any hero within ' + CFG.trapNotice + ' spaces. They cannot cross doorways or stairs.'); }
-  }
-  // The Haunted Record Player
-  const rec = S.record, gp = obj(S, 'gramophone').t[0], gpos = { f: 'U', c: gp[0], r: gp[1] };
-  if (!rec.calmed) {
-    rec.timer--;
-    if (rec.timer <= 0) {
-      rec.timer = CFG.recordTimer;
-      const victims = heroList(S).filter(h => h.f === 'U' && awake(h) && !h.hidden && cheb(h, gpos) <= CFG.recordRange);
-      yield { t: 'fx', kind: 'record', hit: victims.length > 0 };
-      if (victims.length || heroList(S).some(h => h.f === 'U' && awake(h))) yield { t: 'log', cls: 'hazard', text: 'The record player turns by itself. A pale blue hand gropes out of the horn' + (victims.length ? '.' : ' and closes on nothing.') };
-      for (const h of victims) {
-        const res = yield* damage(S, h, CFG.recordDamage, 'record');
-        if (res !== 'hurt' || !awake(h)) continue;
-        const spots = []; for (let r = 1; r < H - 1; r++) for (let c = 1; c < W - 1; c++) { const p = { f: 'U', c, r }; if (walkable(S, 'U', c, r) && !STAIRS[key(p)] && !S.traps.some(t => same(t, p)) && !heroList(S).some(x => same(x, p)) && !same(p, S.hollow) && cheb(p, S.ghost) > 1 && cheb(p, gpos) > CFG.recordRange) spots.push(p); }
-        const to = pickOf(S, spots), from = { f: h.f, c: h.c, r: h.r };
-        releaseTrap(S, h); h.holding = false; Object.assign(h, to);
-        yield { t: 'teleport', id: h.id, from, thrown: true };
-        yield { t: 'log', cls: 'bad', text: 'The hand flings ' + h.name + ' clear across the floor, into the ' + roomAt(to.f, to.c, to.r) + '.' };
-        yield* say(S, h.id, 'thrown');
-      }
-      yield* tip(S, 'record', 'The record player counts down 3, 2, 1. When it plays, anyone within 2 spaces loses a heart and is thrown somewhere on that floor.');
-    }
-  }
-  // The Weeping Doll
-  const dp = obj(S, 'doll').t[0], dpos = { c: dp[0], r: dp[1] };
-  for (const h of heroList(S)) if (h.f === 'U' && awake(h) && !h.hidden && cheb(h, dpos) <= CFG.dollRange) {
-    yield { t: 'log', cls: 'hazard', text: 'The Weeping Doll\'s sobbing gets inside ' + h.name + '\'s head.' };
-    yield* scare(S, h, CFG.dollFright, 'doll');
-    yield* tip(S, 'doll', 'The Weeping Doll adds 1 Fright to anyone within 2 spaces when the haunt ends.');
+    if (tr.holding || tr.dormant <= 0) continue;
+    tr.dormant--; if (tr.dormant > 0) continue;
+    const on = heroList(S).find(h => awake(h) && same(h, tr)); if (on) yield* snapTrap(S, tr, on);
   }
 }
 function* clockPhase(S) {
@@ -1127,7 +1197,7 @@ function turnOrder(S) {
 function* game(S) {
   yield { t: 'start' };
   while (!S.over) {
-    S.bondRound = {}; for (const h of heroList(S)) h.protectedRound = false;
+    S.bondRound = {}; for (const h of heroList(S)) { h.protectedRound = false; h.dolled = false; }
     yield { t: 'round', n: S.round };
     for (const id of turnOrder(S)) { if (S.over) break; yield* heroTurn(S, S.heroes[id]); }
     if (S.over) break;
@@ -1139,28 +1209,32 @@ function* game(S) {
 }
 
 /* ---------- the teammate's mind (also drives headless tests) ---------- */
+const aiAvoid = (S, h) => (recThreat(S, h) && !inRec(S, h) ? p => inRec(S, p) : null);
 function aiGoal(S, h) {
   const p = partner(S, h), opts = options(S, h), ch = CHAINS[h.chain];
   const find = (t, f) => opts.find(o => o.type === t && !o.disabled && (!f || f(o)));
   const adjP = () => neighbors(S, p).filter(q => q.f === p.f);
-  const distTo = tiles => { if (!tiles.length) return 1e9; const m = bfs(S, tiles, { noTraps: true }); const n = m.get(key(h)); return n ? n.d : 1e9; };
+  const av = aiAvoid(S, h);
+  const distTo = tiles => { if (!tiles.length) return 1e9; const m = bfs(S, tiles, { noTraps: true, avoid: av }); const n = m.get(key(h)); return n ? n.d : 1e9; };
   if (h.trapped) return { act: find('breakfree') };
+  const near = stepOf(S, h) === 'done' ? 99 : 6; // with his own cards done he will cross the house for his partner
   if (!p.escaped) {
     if (p.down) { const o = find('help', x => x.help === 'revive'); return o ? { act: o } : { go: adjP() }; }
-    if (p.possessed) { const o = find('help', x => x.help === 'snap'); if (o) return { act: o }; if (distTo(adjP()) <= 5) return { go: adjP() }; }
-    if (p.trapped) { const o = find('help', x => x.help === 'free'); if (o) return { act: o }; if (distTo(adjP()) <= 5) return { go: adjP() }; }
+    if (p.possessed) { const o = find('help', x => x.help === 'snap'); if (o) return { act: o }; if (distTo(adjP()) <= near) return { go: adjP() }; }
+    if (p.trapped) { const o = find('help', x => x.help === 'free'); if (o) return { act: o }; if (distTo(adjP()) <= near) return { go: adjP() }; }
   }
   if (h.hearts <= 1) { const o = find('useitem', x => x.item === 'bandage' && x.target === h.id); if (o) return { act: o }; }
   if (h.fright >= 4) { const o = find('useitem', x => x.item === 'salts'); if (o) return { act: o }; }
   if (awake(p) && p.hearts <= 1) { const o = find('useitem', x => x.item === 'bandage' && x.target === p.id); if (o) return { act: o }; }
   if (awake(p) && p.fright >= 4) { const o = find('help', x => x.help === 'calm'); if (o) return { act: o }; }
+  if (h.actions === 1 && S.ghost.f === h.f && cheb(h, S.ghost) <= 2) { const o = find('useitem', x => x.item === 'salt'); if (o) return { act: o }; }
   // hand over what belongs to the partner
   const theirs = CHAINS[p.chain].item;
   if (h.inv.includes(theirs) && !p.useDone && awake(p)) { const o = find('give', x => x.item === theirs); return o ? { act: o } : { go: adjP() }; }
   const fetch = item => { // go to wherever an item is
     const l = locate(S, item); if (!l) return null;
     if (l.where === 'ground') return { go: [l.pos] };
-    if (l.where === 'obj') { const o = find('search', x => x.obj === l.id); return o ? { act: o } : { go: adjTilesOfObj(S, obj(S, l.id)) }; }
+    if (l.where === 'room') { const o = find('search', x => l.objs.some(q => q.id === x.obj)); return o ? { act: o } : { go: roomGoal(S, l) }; } // he hunts like anyone else: nearest token first
     if (l.where === 'hero' && l.id !== h.id) return { go: adjP() };
     return null;
   };
@@ -1180,6 +1254,10 @@ function aiGoal(S, h) {
   const coop = () => { if (h.holding) return { act: find('end') }; if (p.possessed) return adjObj(h, ob) ? { act: find('end') } : { go: adjTilesOfObj(S, ob) }; const o = find('lift'); return o ? { act: o } : { go: adjTilesOfObj(S, ob) }; };
   if (!S.coopDone && p.holding && !h.holding && !p.possessed && distTo(adjTilesOfObj(S, ob)) <= 6) return coop();
   const st = stepOf(S, h);
+  if (h.id === 'wesley' && S.insight >= CFG.deduceCost && S.coopDone && awake(p)) { // Brock is carrying a thinking task: go and do it for him
+    const pc = CHAINS[p.chain];
+    if (pc.brain && !p.useDone && p.inv.includes(pc.item)) { const d = find('deduce', x => x.target === p.id); if (d) return { act: d }; if (st === 'done' || distTo(adjP()) <= 4) return { go: adjP() }; }
+  }
   if (st === 'find') { const g = fetch(ch.item); if (g) return g; }
   if (st === 'coop') return coop();
   if (st === 'use') {
@@ -1211,18 +1289,15 @@ function aiAct(S, h) {
 }
 function aiMove(S, h, ev) {
   const g = S.ai[h.id]; if (!g || !g.go || !g.go.length) return null;
-  const m = bfs(S, g.go, { noTraps: true });
-  const gp = obj(S, 'gramophone').t[0], dp = obj(S, 'doll').t[0];
+  const m = bfs(S, g.go, { noTraps: true, avoid: aiAvoid(S, h) });
   const gaze = new Set(gazeTiles(S).map(key));
   const score = t => {
     const n = m.get(key(t)); let s = (n ? n.d : 999) * 10;
-    if (t.trap) s += 2000;
+    if (t.trap || t.hand) s += 2000;
+    if (t.doll) s += 8;
     if (t.exit) s -= 5;
     if (t.f === S.ghost.f && cheb(t, S.ghost) <= 1 && S.ghost.entranced <= 0) s += 14;
-    if (t.f === 'U' && !S.record.calmed && S.record.timer <= 1 && Math.max(Math.abs(t.c - gp[0]), Math.abs(t.r - gp[1])) <= CFG.recordRange) s += 25;
     if (gaze.has(key(t))) s += 6;
-    if (t.f === 'U' && Math.max(Math.abs(t.c - dp[0]), Math.abs(t.r - dp[1])) <= CFG.dollRange) s += 5;
-    for (const tr of S.traps) if (!tr.holding && tr.f === t.f && manh(tr, t) === 1 && tr.dormant <= 0) s += 9;
     return s;
   };
   let best = null, bs = score({ f: h.f, c: h.c, r: h.r });
@@ -1230,16 +1305,13 @@ function aiMove(S, h, ev) {
   return best;
 }
 function aiAnswer(S, ev) {
-  if (ev.kind === 'protect') return S.heroes.brock.hearts >= 2;
+  if (ev.kind === 'protect') { const b = S.heroes.brock, w = S.heroes.wesley; return b.hearts >= 2 && (w.hearts <= 1 || (b.f === w.f && manh(b, w) <= 6)); } // he does not cross the house for a scratch
   if (ev.kind === 'abandon') return false;
-  if (ev.kind === 'reroll') {
-    const want = heroList(S).some(h => CHAINS[h.chain].brain && !h.useDone);
-    return S.insight >= (want ? CFG.deduceCost + CFG.rerollCost : CFG.rerollCost);
-  }
+  if (ev.kind === 'reroll') return true;
   return false;
 }
 
-root.HW = { MEMORIES, routeInfo, CFG, MAPS, W, H, DIRS, STAIRS, HIDES, EXITS, DOORFRONT, ITEMS, CHAINS, CLUES, STORY, LINES, GHOST_NAMES, HOLLOW_NAMES,
+root.HW = { MEMORIES, routeInfo, theRoom, MARKS, inRec, inDoll, recThreat, roomPieces, roomGoal, coinHolder, CFG, MAPS, W, H, DIRS, STAIRS, HIDES, EXITS, DOORFRONT, ITEMS, CHAINS, CLUES, STORY, LINES, GHOST_NAMES, HOLLOW_NAMES,
   key, same, cheb, roomAt, newGame, game, options, hint, reach, gazeTiles, stepOf, tier, obj, fmtTime, locate, adjObj, adjTilesOfObj, isExit, isDoorFront,
   aiAct, aiMove, aiAnswer, canReroll, movePts, partner, heroList, awake, bfs };
 })(typeof window !== 'undefined' ? window : globalThis);
